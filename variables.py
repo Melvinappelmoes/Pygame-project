@@ -1,4 +1,5 @@
 import pygame
+
 # maakt alle benodigde kleuren
 GREY = (75, 75, 75)
 BLACK = (0, 0, 0)
@@ -10,9 +11,11 @@ BLUE = (0,0,255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 
+# maakt de variablen voor het scherm
 window_width = 300
 window_height = 2 * window_width
 grid_size = 30
 
+# maakt het scherm en de klok
 screen = pygame.display.set_mode((window_width, window_height))
 clock = pygame.time.Clock()

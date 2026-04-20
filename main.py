@@ -5,6 +5,14 @@ from classes import *
 from variables import *
 pygame.init()
 
+
+
+# verschil maken tussen bewegende en permanente blokken
+# detecten wanneer het de rand van scherm of een ander blok raakt
+# dan moet het blok permanent gemaakt worden
+
+
+
 def make_grid():
     # maakt de grid door, door het hele bord in rijen te gaan met stapsgrootte = grid_size
     for x in range(0, width // grid_size):
@@ -27,16 +35,18 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 t.rotation = (t.rotation + 1) % len(t.shape)
+            if event.key == pygame.K_z:
+                t.rotation = (t.rotation - 1) % len(t.shape)
             if event.key == pygame.K_n:
+                t.rotation = 0
                 t = random_tetrimino()
 
     screen.fill(BLACK)
     
     t.draw()
     make_grid()
+    t.move_down()
+    t.move_horizontal()
 
-    # moet nog vertraagd worden
-    # t.move_down() !!!
-
-    clock.tick(30)
+    clock.tick(60)
     pygame.display.flip()

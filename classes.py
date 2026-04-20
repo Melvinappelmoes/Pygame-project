@@ -7,6 +7,11 @@ class Tetrimino():
         self.shape = shape
         self.rotation = 0
 
+        self.fall_time = 0
+        self.fall_speed = 0.5
+        self.movement_time = 0
+        self.movement_delay = 0.1
+
     def draw(self):
         for y, row in enumerate(self.shape[self.rotation]):
             for x, cube in enumerate(row):
@@ -15,4 +20,17 @@ class Tetrimino():
                     pygame.draw.rect(screen, self.color, rect)
 
     def move_down(self):
-        self.y += grid_size
+        self.fall_time += delta_time
+        if self.fall_time >= self.fall_speed:
+            self.y += grid_size
+            self.fall_time = 0
+
+    def move_horizontal(self):
+        self.movement_time += delta_time
+        if self.movement_time >= self.movement_delay:
+            keys_pressed = pygame.key.get_pressed()
+            if keys_pressed[pygame.K_RIGHT]:
+                self.x += grid_size
+            if keys_pressed[pygame.K_LEFT]:
+                self.x -= grid_size
+            self.movement_time = 0

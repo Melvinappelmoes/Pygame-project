@@ -18,4 +18,9 @@ grid_size = 30
 
 # maakt het scherm en de klok
 screen = pygame.display.set_mode((width, height))
+pygame.display.set_caption('Tetris')
+logo = pygame.image.load("tetris_logo.png")
+pygame.display.set_icon(logo)
 clock = pygame.time.Clock()
+
+delta_time = clock.tick(60) / 1000

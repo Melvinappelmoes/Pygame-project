@@ -1,6 +1,4 @@
 import pygame
-import random
-from tetriminoes import tetriminoes
 from classes import *
 from variables import *
 pygame.init()
@@ -20,13 +18,10 @@ def make_grid():
             rect = pygame.Rect(x*grid_size, y*grid_size, grid_size, grid_size)
             pygame.draw.rect(screen, GREY, rect, 1)
 
-def random_tetrimino():
-    letter = random.choice(list(tetriminoes.keys()))
-    return tetriminoes[letter]
+tetris = Tetris()
+current = tetris.current_shape
 
-t = random_tetrimino()
-
-# main gameloop (moet miss nog in een class)
+# main gameloop
 running = True
 while running:
     for event in pygame.event.get():
@@ -34,21 +29,27 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
-                t.rotation = (t.rotation + 1) % len(t.shape)
+                current.min_x, current.max_x = 4,0
+                current.rotation = (current.rotation + 1) % len(current.shape)
             if event.key == pygame.K_z:
-                t.rotation = (t.rotation - 1) % len(t.shape)
+                current.min_x, current.max_x = 4,0
+                current.rotation = (current.rotation - 1) % len(current.shape)
+    
             if event.key == pygame.K_SPACE:
-                t.fall_speed = 0.0001
-            if event.key == pygame.K_n:
-                t.rotation = 0
-                t = random_tetrimino()
+                current.fall_speed = 0.0001
+            if event.key == pygame.K_DOWN:
+                current.fall_speed *= (1/20)
+    
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_DOWN:
+                current.fall_speed = (0.8 - ((tetris.level - 1) * 0.007))**(tetris.level-1)
 
     screen.fill(BLACK)
     
-    t.draw()
+    current.draw()
     make_grid()
-    t.move_down()
-    t.move_horizontal()
+    current.move_down()
+    current.move_horizontal()
 
     clock.tick(60)
     pygame.display.flip()

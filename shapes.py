@@ -1,12 +1,9 @@
-from classes import *
 from variables import *
-
 # maakt de tetrominoes aan als matrixes in een dictionary
 o_t_shape = [[[0,0,0,0],
             [0,1,1,0],
             [0,1,1,0],
             [0,0,0,0]]]
-o_t = Tetrimino(o_t_shape, YELLOW)
 
 i_t_shape = [[[0,0,0,0],
             [1,1,1,1],
@@ -17,7 +14,6 @@ i_t_shape = [[[0,0,0,0],
             [0,0,1,0],
             [0,0,1,0],
             [0,0,1,0]]]
-i_t = Tetrimino(i_t_shape, LIGHT_BLUE)
 
 s_t_shape = [[[0,1,1,0],
             [1,1,0,0],
@@ -28,7 +24,6 @@ s_t_shape = [[[0,1,1,0],
             [0,1,1,0],
             [0,0,1,0],
             [0,0,0,0]]]
-s_t = Tetrimino(s_t_shape, GREEN)
 
 z_t_shape = [[[1,1,0,0],
             [0,1,1,0],
@@ -39,7 +34,6 @@ z_t_shape = [[[1,1,0,0],
             [0,1,1,0],
             [0,1,0,0],
             [0,0,0,0]]]
-z_t = Tetrimino(z_t_shape, RED)
 
 t_t_shape = [[[0,1,0,0],
             [1,1,1,0],
@@ -60,7 +54,6 @@ t_t_shape = [[[0,1,0,0],
             [1,1,0,0],
             [0,1,0,0],
             [0,0,0,0]]]
-t_t = Tetrimino(t_t_shape, PURPLE)
 
 j_t_shape = [[[1,0,0,0],
             [1,1,1,0],
@@ -81,7 +74,6 @@ j_t_shape = [[[1,0,0,0],
             [0,1,0,0],
             [1,1,0,0],
             [0,0,0,0]]]
-j_t = Tetrimino(j_t_shape, BLUE)
 
 l_t_shape = [[[0,0,1,0],
             [1,1,1,0],
@@ -102,15 +94,14 @@ l_t_shape = [[[0,0,1,0],
             [0,1,0,0],
             [0,1,0,0],
             [0,0,0,0]]]
-l_t = Tetrimino(l_t_shape, ORANGE)
 
 # maakt een dictionary van de tetriminoes
-tetriminoes = {
-    "O" : o_t,
-    "I" : i_t,
-    "S" : s_t,
-    "Z" : z_t,
-    "T" : t_t,
-    "J" : j_t,
-    "L" : l_t
+tetriminos = {
+    "O" : (o_t_shape, YELLOW),
+    "I" : (i_t_shape, LIGHT_BLUE),
+    "S" : (s_t_shape, GREEN),
+    "Z" : (z_t_shape, RED),
+    "T" : (t_t_shape, PURPLE),
+    "J" : (j_t_shape, BLUE),
+    "L" : (l_t_shape, ORANGE)
 }

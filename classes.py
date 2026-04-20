@@ -7,8 +7,9 @@ class Tetrimino():
         self.shape = shape
         self.rotation = 0
 
+        self.level = 1
         self.fall_time = 0
-        self.fall_speed = 0.5
+        self.fall_speed = (0.8 - ((self.level - 1) * 0.007))**(self.level-1)
         self.movement_time = 0
         self.movement_delay = 0.1
 
@@ -28,9 +29,11 @@ class Tetrimino():
     def move_horizontal(self):
         self.movement_time += delta_time
         if self.movement_time >= self.movement_delay:
-            keys_pressed = pygame.key.get_pressed()
             if keys_pressed[pygame.K_RIGHT]:
                 self.x += grid_size
             if keys_pressed[pygame.K_LEFT]:
                 self.x -= grid_size
+            if keys_pressed[pygame.K_DOWN]:
+                self.fall_speed *= 20
             self.movement_time = 0
+            self.fall_speed = (0.8 - ((self.level - 1) * 0.007))**(self.level-1)

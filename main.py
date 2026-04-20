@@ -37,6 +37,8 @@ while running:
                 t.rotation = (t.rotation + 1) % len(t.shape)
             if event.key == pygame.K_z:
                 t.rotation = (t.rotation - 1) % len(t.shape)
+            if event.key == pygame.K_SPACE:
+                t.fall_speed = 0.0001
             if event.key == pygame.K_n:
                 t.rotation = 0
                 t = random_tetrimino()

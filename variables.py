@@ -24,3 +24,5 @@ pygame.display.set_icon(logo)
 clock = pygame.time.Clock()
 
 delta_time = clock.tick(60) / 1000
+
+keys_pressed = pygame.key.get_pressed()

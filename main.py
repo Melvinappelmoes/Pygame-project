@@ -4,26 +4,16 @@ from variables import *
 pygame.init()
 
 
-
 # verschil maken tussen bewegende en permanente blokken
 # detecten wanneer het de rand van scherm of een ander blok raakt
 # dan moet het blok permanent gemaakt worden
 
-
-
-def make_grid():
-    # maakt de grid door, door het hele bord in rijen te gaan met stapsgrootte = grid_size
-    for x in range(0, width // grid_size):
-        for y in range(0, height // grid_size):
-            rect = pygame.Rect(x*grid_size, y*grid_size, grid_size, grid_size)
-            pygame.draw.rect(screen, GREY, rect, 1)
-
 tetris = Tetris()
-current = tetris.current_shape
 
 # main gameloop
 running = True
 while running:
+    current = tetris.current_shape
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -47,9 +37,9 @@ while running:
     screen.fill(BLACK)
     
     current.draw()
-    make_grid()
-    current.move_down()
-    current.move_horizontal()
+    tetris.draw_grid()
+    current.move_down(tetris)
+    current.move_horizontal(tetris)
 
     clock.tick(60)
     pygame.display.flip()

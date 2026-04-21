@@ -96,12 +96,12 @@ l_t_shape = [[[0,0,1,0],
             [0,0,0,0]]]
 
 # maakt een dictionary van de tetriminoes
-tetriminos = {
-    "O" : (o_t_shape, YELLOW),
-    "I" : (i_t_shape, LIGHT_BLUE),
-    "S" : (s_t_shape, GREEN),
-    "Z" : (z_t_shape, RED),
-    "T" : (t_t_shape, PURPLE),
-    "J" : (j_t_shape, BLUE),
-    "L" : (l_t_shape, ORANGE)
-}
+shapes = [
+    (o_t_shape, YELLOW),
+    (i_t_shape, LIGHT_BLUE),
+    (s_t_shape, GREEN),
+    (z_t_shape, RED),
+    (t_t_shape, PURPLE),
+    (j_t_shape, BLUE),
+    (l_t_shape, ORANGE)
+]

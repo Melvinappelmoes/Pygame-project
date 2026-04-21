@@ -4,8 +4,7 @@ from variables import *
 pygame.init()
 
 # to do:
-# - Zorgen dat wanneer je draait je niet in andere blokken kan komen
-# - Rij weghalen wanneer hij vol zit (onderste rij uit grid en nieuwe bovenaan (denk ik))
+# - Miss rij weghalen cleaner maken
 # - Punten systeem met level up systeem
 # - Game over systeem
 # - Ghost piece
@@ -22,18 +21,13 @@ running = True
 while running:
     current = tetris.current_shape
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT: 
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
-                current.min_x, current.max_x = 4,0
-                # HOORT NIET ZO MAAR TE KUNNEN DRAAIEN!!!
-                current.rotation = (current.rotation + 1) % len(current.shape)
+                current.rotate(tetris, 1)
             if event.key == pygame.K_z:
-                current.min_x, current.max_x = 4,0
-                # HOORT NIET ZO MAAR TE KUNNEN DRAAIEN!!!
-                current.rotation = (current.rotation - 1) % len(current.shape)
-    
+                current.rotate(tetris, -1)
             if event.key == pygame.K_SPACE:
                 current.fall_speed = 0.0001
             if event.key == pygame.K_DOWN:

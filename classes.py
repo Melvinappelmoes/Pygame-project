@@ -96,12 +96,12 @@ class Tetrimino():
         if self.movement_time >= self.movement_delay:
             keys_pressed = pygame.key.get_pressed()
             if keys_pressed[pygame.K_RIGHT]:
-                if self.x + (self.max_x + 1) * grid_size >= width or self.check_grid(tetris, 1, 0, 0):
+                if self.check_grid(tetris, 1, 0, 0):
                     pass
                 else:
                     self.x += grid_size
             if keys_pressed[pygame.K_LEFT]:
-                if self.x + self.min_x * grid_size <= 0 or self.check_grid(tetris, -1, 0, 0):
+                if self.check_grid(tetris, -1, 0, 0):
                     pass
                 else:
                     self.x -= grid_size
@@ -111,7 +111,7 @@ class Tetrimino():
         for x in range(0, 4):
             for y in range(0, 4):
                 if self.shape[(self.rotation+rotation) % len(self.shape)][y][x] == 1:
-                    if self.x + x * grid_size + grid_size > width or self.x + x * grid_size < 0 or self.check_grid(tetris, 0, 0, 1):
+                    if self.check_grid(tetris, 0, 0, 1):
                         return
         self.rotation = (self.rotation + rotation) % len(self.shape)
         self.min_x, self.max_x, self.max_y = 4,0,0
@@ -119,7 +119,9 @@ class Tetrimino():
     def check_grid(self, tetris, left_or_right, up, rotation):
         for x in range(0, 4):
             for y in range(0, 4):
+                new_x = (self.x // grid_size) + x + left_or_right
+                new_y = (self.y // grid_size) + y + 2 + up
                 if self.shape[(self.rotation+rotation) % len(self.shape)][y][x] == 1:
-                    if tetris.grid[(self.y // grid_size) + y + 2 + up][(self.x // grid_size)+ x + left_or_right] != 0:
-                        return True
+                    if new_x * grid_size + grid_size > width or new_x * grid_size < 0 or tetris.grid[new_y][new_x] != 0:
+                            return True
         return False

@@ -6,7 +6,7 @@ pygame.init()
 # to do:
 # - Miss rij weghalen cleaner maken
 # - Punten systeem met level up systeem
-# - Game over systeem
+# - Game over systeem (checken of er een 1 in de bovenste rij zit)
 # - Ghost piece
 # - High score opslaan (SQL)
 # - Menu

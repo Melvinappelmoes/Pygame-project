@@ -3,10 +3,17 @@ from classes import *
 from variables import *
 pygame.init()
 
-
-# verschil maken tussen bewegende en permanente blokken
-# detecten wanneer het de rand van scherm of een ander blok raakt
-# dan moet het blok permanent gemaakt worden
+# to do:
+# - Zorgen dat wanneer je draait je niet in andere blokken kan komen
+# - Rij weghalen wanneer hij vol zit (onderste rij uit grid en nieuwe bovenaan (denk ik))
+# - Punten systeem met level up systeem
+# - Game over systeem
+# - Ghost piece
+# - High score opslaan (SQL)
+# - Menu
+# - Volgende tetriminos laten zien
+# - Een hold cel
+# - MUZIEK
 
 tetris = Tetris()
 
@@ -20,9 +27,11 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 current.min_x, current.max_x = 4,0
+                # HOORT NIET ZO MAAR TE KUNNEN DRAAIEN!!!
                 current.rotation = (current.rotation + 1) % len(current.shape)
             if event.key == pygame.K_z:
                 current.min_x, current.max_x = 4,0
+                # HOORT NIET ZO MAAR TE KUNNEN DRAAIEN!!!
                 current.rotation = (current.rotation - 1) % len(current.shape)
     
             if event.key == pygame.K_SPACE:

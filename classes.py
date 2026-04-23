@@ -100,12 +100,13 @@ class Tetrimino():
                     pass
                 else:
                     self.x += grid_size
+                    self.movement_time = 0
             if keys_pressed[pygame.K_LEFT]:
                 if self.check_grid(tetris, -1, 0, 0):
                     pass
                 else:
                     self.x -= grid_size
-            self.movement_time = 0
+                    self.movement_time = 0
     
     def rotate(self, tetris, rotation):
         for x in range(0, 4):

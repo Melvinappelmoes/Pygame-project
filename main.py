@@ -41,8 +41,9 @@ while running:
     
     current.draw()
     tetris.draw_grid()
-    current.move_down(tetris)
     current.move_horizontal(tetris)
+    current.move_down(tetris)
+    
 
     clock.tick(60)
     pygame.display.flip()

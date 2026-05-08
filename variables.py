@@ -15,7 +15,7 @@ WHITE = (255, 255, 255)
 # maakt de variablen voor het scherm
 width = 300
 height = 2 * width
-grid_size = 30
+grid_size = width // 10
 width_ghost = 2
 
 # maakt het scherm en de klok
@@ -24,5 +24,7 @@ pygame.display.set_caption('Tetris')
 logo = pygame.image.load("tetris_logo.png")
 pygame.display.set_icon(logo)
 clock = pygame.time.Clock()
+
+fps = 60
 
 delta_time = clock.tick(60) / 1000

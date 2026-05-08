@@ -12,7 +12,6 @@ class Tetris():
         self.score = 0
         self.grid = []
         self.make_grid()
-        self.game_over = False
         self.rows_to_clear = []
         self.clearing = False
         self.clear_timer = 0
@@ -70,13 +69,29 @@ class Tetris():
 
 
     def spawn_block(self):
-                
         self.tetriminos.pop(0)
         self.current_shape = self.tetriminos[0]
         if len(self.tetriminos) < 5:
             self.random_tetriminos()
         self.current_shape.x = grid_size*3
         self.current_shape.y = -(2*grid_size)
+
+    def game_over(self):
+        for cell in self.grid[0]:
+            if cell != 0:
+                return False
+        for cell in self.grid[1]:
+            if cell != 0:
+                return False
+        return True
+    
+    def pause(self):
+        paused = True
+        while paused:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        paused = False
 
 class Tetrimino():
     def __init__(self, shape, color, level):

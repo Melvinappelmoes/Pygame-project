@@ -30,6 +30,8 @@ while running:
                 current.move_down(tetris, True)
             if event.key == pygame.K_DOWN:
                 current.fall_speed *= (1/20)
+            if event.key == pygame.K_ESCAPE:
+                tetris.pause()
     
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
@@ -50,5 +52,7 @@ while running:
 
     tetris.draw_grid()
 
-    clock.tick(60)
+    running = tetris.game_over()
+
+    clock.tick(fps)
     pygame.display.flip()

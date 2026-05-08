@@ -17,6 +17,7 @@ tetris = Tetris()
 # main gameloop
 running = True
 while running:
+    running = tetris.game_over()
     current = tetris.current_shape
     for event in pygame.event.get():
         if event.type == pygame.QUIT: 
@@ -51,8 +52,6 @@ while running:
         current.move_horizontal(tetris)
 
     tetris.draw_grid()
-
-    running = tetris.game_over()
 
     clock.tick(fps)
     pygame.display.flip()

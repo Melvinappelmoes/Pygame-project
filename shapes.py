@@ -1,8 +1,8 @@
 from variables import *
 # maakt de tetrominoes aan als matrixes in een dictionary
-o_t_shape = [[[0,0,0,0],
+o_t_shape = [[[0,1,1,0],
             [0,1,1,0],
-            [0,1,1,0],
+            [0,0,0,0],
             [0,0,0,0]]]
 
 i_t_shape = [[[0,0,0,0],

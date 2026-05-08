@@ -37,18 +37,18 @@ while running:
 
     screen.fill(BLACK)
     
-    current.draw(tetris)
-    tetris.draw_grid()
-    current.ghost_piece(tetris)
-    
     if tetris.clearing:
         tetris.clear_rows()
     elif tetris.spawn_ready:
         tetris.spawn_block()
         tetris.spawn_ready = False
     else: 
+        current.draw(tetris)
+        current.ghost_piece(tetris)
         current.move_down(tetris, False)
         current.move_horizontal(tetris)
+
+    tetris.draw_grid()
 
     clock.tick(60)
     pygame.display.flip()

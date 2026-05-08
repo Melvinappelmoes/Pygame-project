@@ -5,18 +5,18 @@ GREY = (75, 75, 75)
 BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
 LIGHT_BLUE = (0,191,255)
-PURPLE = (128,0,128)
-ORANGE = (255,165,0)
-BLUE = (0,0,255)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
+PURPLE = (191,0,255)
+ORANGE = (255,130,0)
+BLUE = (0,50,210)
+GREEN = (0, 230, 0)
+RED = (250, 0, 0)
 WHITE = (255, 255, 255)
 
 # maakt de variablen voor het scherm
 width = 300
 height = 2 * width
 grid_size = 30
-width_ghost = 1
+width_ghost = 2
 
 # maakt het scherm en de klok
 screen = pygame.display.set_mode((width, height))

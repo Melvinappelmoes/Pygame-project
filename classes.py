@@ -59,7 +59,6 @@ class Tetris():
         if self.clear_timer < self.clear_delay:
             return
         
-        
         self.grid.pop(self.rows_to_clear[0])
         self.rows_to_clear.pop(0)
         self.grid.insert(1, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0])

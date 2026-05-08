@@ -107,12 +107,12 @@ class Tetrimino():
                     self.max_y = max(self.max_y, y)
                     rect = pygame.Rect(self.x + x * grid_size, self.y + y *grid_size, grid_size, grid_size)
                     pygame.draw.rect(screen, self.color, rect)
-                    # self.ghost_piece(tetris)
+        
 
     def move_down(self, tetris, spatie):
         self.fall_time += delta_time
         if spatie:
-            while not (self.y + (self.max_y+1) * grid_size >= height or self.check_grid(tetris, 0, 1, 0)):
+            while not (self.y + (self.max_y+1) * grid_size >= height or self.check_grid(tetris, self.y, 0, 1, 0)):
                 self.y += grid_size
 
             for y in range(0, 4):
@@ -124,7 +124,7 @@ class Tetrimino():
             return
 
         elif self.fall_time >= self.fall_speed:
-            if self.y + (self.max_y+1) * grid_size >= height or self.check_grid(tetris, 0, 1, 0):
+            if self.y + (self.max_y+1) * grid_size >= height or self.check_grid(tetris, self.y, 0, 1, 0):
                 for y in range(0, 4):
                     for x in range(0, 4):
                         if ((self.shape[self.rotation])[y])[x] == 1:
@@ -140,13 +140,13 @@ class Tetrimino():
         if self.movement_time >= self.movement_delay:
             keys_pressed = pygame.key.get_pressed()
             if keys_pressed[pygame.K_RIGHT]:
-                if self.check_grid(tetris, 1, 0, 0):
+                if self.check_grid(tetris, self.y, 1, 0, 0):
                     pass
                 else:
                     self.x += grid_size
                     self.movement_time = 0
             if keys_pressed[pygame.K_LEFT]:
-                if self.check_grid(tetris, -1, 0, 0):
+                if self.check_grid(tetris, self.y, -1, 0, 0):
                     pass
                 else:
                     self.x -= grid_size
@@ -156,26 +156,27 @@ class Tetrimino():
         for x in range(0, 4):
             for y in range(0, 4):
                 if self.shape[(self.rotation+rotation) % len(self.shape)][y][x] == 1:
-                    if self.check_grid(tetris, 0, 0, 1):
+                    if self.check_grid(tetris, self.y, 0, 0, 1):
                         return
         self.rotation = (self.rotation + rotation) % len(self.shape)
         self.min_x, self.max_x, self.max_y = 4,0,0
     
-    def check_grid(self, tetris, left_or_right, up, rotation):
+    def check_grid(self, tetris, huidige_y, left_or_right, down, rotation):
         for x in range(0, 4):
             for y in range(0, 4):
                 new_x = (self.x // grid_size) + x + left_or_right
-                new_y = (self.y // grid_size) + y + 2 + up
+                new_y = (huidige_y // grid_size) + y + 2 + down
                 if self.shape[(self.rotation+rotation) % len(self.shape)][y][x] == 1:
-                    if new_x * grid_size + grid_size > width or new_x * grid_size < 0 or tetris.grid[new_y][new_x] != 0:
+                    if new_x * grid_size + grid_size > width or new_x * grid_size < 0 or new_y >= 22 or tetris.grid[new_y][new_x] != 0:
                             return True
         return False
     
-    # def ghost_piece(self, tetris):
-    #     while not (self.ghost_y + (self.max_y+1) * grid_size >= height or self.check_grid(tetris, 0, 1, 0)):
-    #             self.ghost_y += grid_size
-    #     for y, row in enumerate(self.shape[self.rotation]):
-    #         for x, cube in enumerate(row):
-    #             if cube == 1:
-    #                 rect = pygame.Rect(self.x + x * grid_size, self.ghost_y + y *grid_size, grid_size, grid_size)
-    #                 pygame.draw.rect(screen, self.color, rect)
+    def ghost_piece(self, tetris):
+        self.ghost_y = self.y
+        while not (self.ghost_y + (self.max_y+1) * grid_size >= height or self.check_grid(tetris, self.ghost_y, 0, 1, 0)):
+                self.ghost_y += grid_size
+        for y, row in enumerate(self.shape[self.rotation]):
+            for x, cube in enumerate(row):
+                if cube == 1:
+                    rect = pygame.Rect(self.x + x * grid_size, self.ghost_y + y *grid_size, grid_size, grid_size)
+                    pygame.draw.rect(screen, self.color, rect, width_ghost)

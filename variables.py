@@ -10,11 +10,13 @@ ORANGE = (255,165,0)
 BLUE = (0,0,255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+WHITE = (255, 255, 255)
 
 # maakt de variablen voor het scherm
 width = 300
 height = 2 * width
 grid_size = 30
+width_ghost = 1
 
 # maakt het scherm en de klok
 screen = pygame.display.set_mode((width, height))

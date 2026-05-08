@@ -6,7 +6,6 @@ pygame.init()
 # to do:
 # - Punten systeem met level up systeem
 # - Game over systeem (checken of er een 1 in de bovenste rij zit)
-# - Ghost piece
 # - High score opslaan (SQL)
 # - Menu
 # - Volgende tetriminos laten zien
@@ -40,7 +39,16 @@ while running:
     
     current.draw(tetris)
     tetris.draw_grid()
-
+    current.ghost_piece(tetris)
+    
+    if tetris.clearing:
+        tetris.clear_rows()
+    elif tetris.spawn_ready:
+        tetris.spawn_block()
+        tetris.spawn_ready = False
+    else: 
+        current.move_down(tetris, False)
+        current.move_horizontal(tetris)
 
     clock.tick(60)
     pygame.display.flip()

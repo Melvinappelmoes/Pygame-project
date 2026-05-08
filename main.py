@@ -4,7 +4,6 @@ from variables import *
 pygame.init()
 
 # to do:
-# - Miss rij weghalen cleaner maken
 # - Punten systeem met level up systeem
 # - Game over systeem (checken of er een 1 in de bovenste rij zit)
 # - Ghost piece
@@ -29,7 +28,7 @@ while running:
             if event.key == pygame.K_z:
                 current.rotate(tetris, -1)
             if event.key == pygame.K_SPACE:
-                current.fall_speed = 0.0001
+                current.move_down(tetris, True)
             if event.key == pygame.K_DOWN:
                 current.fall_speed *= (1/20)
     
@@ -39,10 +38,18 @@ while running:
 
     screen.fill(BLACK)
     
-    current.draw()
+    current.draw(tetris)
     tetris.draw_grid()
-    current.move_down(tetris)
-    current.move_horizontal(tetris)
+
+    if tetris.clearing:
+        tetris.clear_rows()
+    elif tetris.spawn_ready:
+        tetris.spawn_block()
+        tetris.spawn_ready = False
+    else: 
+        current.move_down(tetris, False)
+        current.move_horizontal(tetris)
+
 
     clock.tick(60)
     pygame.display.flip()

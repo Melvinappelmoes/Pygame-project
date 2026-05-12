@@ -1,7 +1,6 @@
 import random
 from variables import *
 from shapes import shapes
-import time
 
 class Tetris():
     def __init__(self):
@@ -17,6 +16,7 @@ class Tetris():
         self.clear_timer = 0
         self.clear_delay = 0.1
         self.spawn_ready = False
+        self.cleared_rows = []
 
     def random_tetriminos(self):
         temp_shapes = shapes
@@ -41,7 +41,6 @@ class Tetris():
                 pygame.draw.rect(screen, GREY, rect, 1)
 
     def check_full_rows(self):
-        self.rows_to_clear = []
         for row_id in range(2, 22):
             if all(self.grid[row_id]):
                 self.rows_to_clear.append(row_id)
@@ -49,9 +48,13 @@ class Tetris():
 
         if self.rows_to_clear:
             self.clearing = True
+            self.cleared_rows = self.rows_to_clear
         else:
             self.spawn_ready = True
 
+        self.calculate_score(self.current_shape)
+
+        
 
     def clear_rows(self):
         self.clear_timer += delta_time
@@ -66,7 +69,6 @@ class Tetris():
         if not self.rows_to_clear:
             self.clearing = False      
             self.spawn_ready = True
-
 
     def spawn_block(self):
         self.tetriminos.pop(0)
@@ -92,6 +94,25 @@ class Tetris():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         paused = False
+    
+    def calculate_score(self, tetrimino):
+        self.score += tetrimino.distance * 2 * self.level
+        tetrimino.distance = 0
+        row_score = 0
+        if len(self.cleared_rows) == 1:
+            row_score = 100
+        if len(self.cleared_rows) == 2:
+            row_score = 300
+        if len(self.cleared_rows) == 3:
+            row_score = 500
+        if len(self.cleared_rows) == 4:
+            row_score = 800
+        self.score += row_score * self.level
+        row_score = 0
+        self.cleared_rows = []
+
+        print("calculate_score aangeroepen")
+
 
 class Tetrimino():
     def __init__(self, shape, color, level):
@@ -112,7 +133,12 @@ class Tetrimino():
         self.movement_time = 0
         self.movement_delay = 0.1
 
-    def draw(self, tetris):
+        self.start_y = 0
+        self.end_y = 0
+
+        self.distance = 0
+
+    def draw(self):
         for y, row in enumerate(self.shape[self.rotation]):
             for x, cube in enumerate(row):
                 if cube == 1:
@@ -123,7 +149,8 @@ class Tetrimino():
                     pygame.draw.rect(screen, self.color, rect)
         
 
-    def move_down(self, tetris, spatie):
+    def move_down(self, tetris, spatie, arrow_down):
+        self.start_y = self.y
         self.fall_time += delta_time
         if spatie:
             while not (self.y + (self.max_y+1) * grid_size >= height or self.check_grid(tetris, self.y, 0, 1, 0)):
@@ -133,8 +160,12 @@ class Tetrimino():
                 for x in range(0, 4):
                     if ((self.shape[self.rotation])[y])[x] == 1:
                         tetris.grid[(self.y // grid_size) + y + 2][(self.x // grid_size)+ x] = self.color
+
+            self.end_y = self.y
             self.fall_time = 0
             tetris.check_full_rows()
+            self.distance = self.distance_traveled()
+            tetris.calculate_score(self)
             return
 
         elif self.fall_time >= self.fall_speed:
@@ -148,6 +179,12 @@ class Tetrimino():
                 return
             self.y += grid_size
             self.fall_time = 0
+
+            if arrow_down:
+                tetris.score += 1 * tetris.level
+                # soft drop score
+
+        
 
     def move_horizontal(self, tetris):
         self.movement_time += delta_time
@@ -194,3 +231,6 @@ class Tetrimino():
                 if cube == 1:
                     rect = pygame.Rect(self.x + x * grid_size, self.ghost_y + y *grid_size, grid_size, grid_size)
                     pygame.draw.rect(screen, self.color, rect, width_ghost)
+
+    def distance_traveled(self):
+        return (self.end_y - self.start_y) // grid_size

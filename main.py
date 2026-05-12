@@ -13,6 +13,7 @@ pygame.init()
 # - MUZIEK
 
 tetris = Tetris()
+arrow_down = False
 
 # main gameloop
 running = True
@@ -28,15 +29,17 @@ while running:
             if event.key == pygame.K_z:
                 current.rotate(tetris, -1)
             if event.key == pygame.K_SPACE:
-                current.move_down(tetris, True)
+                current.move_down(tetris, True, arrow_down)
             if event.key == pygame.K_DOWN:
                 current.fall_speed *= (1/20)
+                arrow_down = True
             if event.key == pygame.K_ESCAPE:
                 tetris.pause()
     
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
                 current.fall_speed = (0.8 - ((tetris.level - 1) * 0.007))**(tetris.level-1)
+                arrow_down = False
 
     screen.fill(BLACK)
     
@@ -46,12 +49,13 @@ while running:
         tetris.spawn_block()
         tetris.spawn_ready = False
     else: 
-        current.draw(tetris)
+        current.draw()
         current.ghost_piece(tetris)
-        current.move_down(tetris, False)
+        current.move_down(tetris, False, arrow_down)
         current.move_horizontal(tetris)
 
     tetris.draw_grid()
+    print(tetris.score)
 
     clock.tick(fps)
     pygame.display.flip()

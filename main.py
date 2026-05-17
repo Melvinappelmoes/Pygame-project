@@ -20,6 +20,7 @@ running = True
 while running:
     running = tetris.game_over()
     current = tetris.current_shape
+    tetris.calculate_level()
     for event in pygame.event.get():
         if event.type == pygame.QUIT: 
             running = False
@@ -43,6 +44,8 @@ while running:
 
     screen.fill(DARK_GREY)
     pygame.draw.rect(screen, BLACK, rect_grid)
+
+    tetris.print_text()
     
     if tetris.clearing:
         tetris.clear_rows()

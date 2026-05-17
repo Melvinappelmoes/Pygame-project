@@ -16,7 +16,9 @@ class Tetris():
         self.clear_timer = 0
         self.clear_delay = 0.1
         self.spawn_ready = False
-        self.cleared_rows = []
+        self.cleared_rows = 0
+        self.total_rows_cleared = 0
+        self.back_to_back = False
 
     def random_tetriminos(self):
         temp_shapes = shapes
@@ -48,7 +50,8 @@ class Tetris():
 
         if self.rows_to_clear:
             self.clearing = True
-            self.cleared_rows = self.rows_to_clear
+            self.cleared_rows = len(self.rows_to_clear)
+            self.total_rows_cleared += len(self.rows_to_clear)
         else:
             self.spawn_ready = True
         self.calculate_score(self.current_shape)
@@ -95,19 +98,62 @@ class Tetris():
     def calculate_score(self, tetrimino):
         self.score += tetrimino.distance * 2 * self.level
         tetrimino.distance = 0
-        row_score = 0
-        if len(self.cleared_rows) == 1:
-            row_score = 100
-        if len(self.cleared_rows) == 2:
-            row_score = 300
-        if len(self.cleared_rows) == 3:
-            row_score = 500
-        if len(self.cleared_rows) == 4:
-            row_score = 800
-        self.score += row_score * self.level
-        row_score = 0
-        self.cleared_rows = []
 
+        # checkt hoeveel rijen er weggehaald zijn
+        # als er een tetris is gehaald (4 rijen weg) dan moet de volgende tetris *1.5
+        row_score = 0
+        if self.cleared_rows == 1:
+            row_score = 100
+            self.back_to_back = False
+        if self.cleared_rows == 2:
+            row_score = 300
+            self.back_to_back = False
+        if self.cleared_rows == 3:
+            row_score = 500
+            self.back_to_back = False
+        if self.cleared_rows == 4:
+            row_score = 800
+            self.back_to_back = True
+
+        # als er een back to back is dan gaat de score * 1.5 en level en anders alleen de level
+        if self.back_to_back:
+            self.score += row_score * 1.5 * self.level
+        else:
+            self.score += row_score * self.level
+
+        row_score = 0
+        self.cleared_rows = 0
+
+    def calculate_level(self):
+        self.level = 1 + self.total_rows_cleared // 10
+
+    def print_text(self):
+        # de x van de tekst is tussen de grid en rand van scherm in
+        x_text = x_grid // 2
+        # de y van de tekst is 3 * grid_size onder het midden van de grid
+        y_text =  height_grid // 2 + 3 * grid_size
+        # bepaalt hoeveel ruimte er tussen de variabelen inzit
+        spacing = 10
+
+        # miss om een vierkant om de tekst heen te stoppen
+        # rect = pygame.Rect(x_text - 2 * grid_size, y_text - spacing, 4 * grid_size, 220)
+        # pygame.draw.rect(screen, WHITE, rect, 1)
+
+        # rendered de text: "SCORE" en laat het op de juiste plek zien met blit
+        score_text = font.render("SCORE", True, WHITE)
+        screen.blit(score_text, (x_text - score_text.get_width() // 2, y_text))
+        score = font.render(f"{int(self.score)}", True, WHITE)
+        screen.blit(score, (x_text - score.get_width() // 2, y_text + grid_size))
+
+        level_text = font.render("LEVEL", True, WHITE)
+        screen.blit(level_text, (x_text - level_text.get_width() // 2, y_text + 2 * grid_size + spacing))
+        level = font.render(f"{self.level}", True, WHITE)
+        screen.blit(level, (x_text - level.get_width() // 2, y_text + 3 * grid_size + spacing))
+
+        lines_text = font.render("LINES", True, WHITE)
+        screen.blit(lines_text, (x_text - lines_text.get_width() // 2, y_text + 4 * grid_size + 2 * spacing))
+        lines = font.render(f"{self.total_rows_cleared}", True, WHITE)
+        screen.blit(lines, (x_text - lines.get_width() // 2, y_text + 5 * grid_size + 2 * spacing))
 
 class Tetrimino():
     def __init__(self, shape, color, level):
@@ -136,6 +182,7 @@ class Tetrimino():
     def draw(self):
         for y, row in enumerate(self.shape[self.rotation]):
             for x, cube in enumerate(row):
+                # alleen als de cel binnen de grid zit moet hij worden laten zien
                 if self.y + y * grid_size >= y_grid:
                     if cube == 1:
                         self.min_x = min(self.min_x, x)

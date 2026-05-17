@@ -1,4 +1,5 @@
 import pygame
+pygame.font.init()
 
 # maakt alle benodigde kleuren
 GREY = (75, 75, 75)
@@ -35,6 +36,8 @@ pygame.display.set_caption('Tetris')
 logo = pygame.image.load("tetris_logo.png")
 pygame.display.set_icon(logo)
 clock = pygame.time.Clock()
+
+font = pygame.font.SysFont("arial", 25)
 
 fps = 60
 

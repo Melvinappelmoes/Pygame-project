@@ -41,13 +41,15 @@ while running:
                 current.fall_speed = (0.8 - ((tetris.level - 1) * 0.007))**(tetris.level-1)
                 arrow_down = False
 
-    screen.fill(BLACK)
+    screen.fill(DARK_GREY)
+    pygame.draw.rect(screen, BLACK, rect_grid)
     
     if tetris.clearing:
         tetris.clear_rows()
     elif tetris.spawn_ready:
         tetris.spawn_block()
         tetris.spawn_ready = False
+        current = tetris.current_shape
     else: 
         current.draw()
         current.ghost_piece(tetris)
@@ -55,7 +57,6 @@ while running:
         current.move_horizontal(tetris)
 
     tetris.draw_grid()
-    print(tetris.score)
 
     clock.tick(fps)
     pygame.display.flip()

@@ -26,18 +26,18 @@ class Tetris():
             self.tetriminos.append(Tetrimino(shape, color, self.level))
 
     def make_grid(self):
-        for y in range(0, (height+2*grid_size) // grid_size):
+        for y in range(0, (height_grid+2*grid_size) // grid_size):
             self.grid.append([])
-            for x in range(0, width // grid_size):
+            for x in range(0, width_grid // grid_size):
                 self.grid[y].append(0)
 
     def draw_grid(self):
-        # maakt de grid door, door het hele bord in rijen te gaan met stapsgrootte = grid_size
-        for row_index, row in enumerate(self.grid):
+        # Maakt de grid door, door het hele bord in rijen te gaan met stapsgrootte = grid_size
+        for row_index, row in enumerate(self.grid[2:]):
             for col_index, cell in enumerate(row):
-                rect = pygame.Rect(col_index *grid_size , (row_index-2) *grid_size, grid_size, grid_size)
+                rect = pygame.Rect(col_index *grid_size + x_grid , (row_index) *grid_size + y_grid, grid_size, grid_size)
                 if cell != 0:
-                    pygame.draw.rect(screen, self.grid[row_index][col_index], rect)
+                    pygame.draw.rect(screen, self.grid[row_index+2][col_index], rect)
                 pygame.draw.rect(screen, GREY, rect, 1)
 
     def check_full_rows(self):
@@ -51,10 +51,7 @@ class Tetris():
             self.cleared_rows = self.rows_to_clear
         else:
             self.spawn_ready = True
-
         self.calculate_score(self.current_shape)
-
-        
 
     def clear_rows(self):
         self.clear_timer += delta_time
@@ -75,8 +72,8 @@ class Tetris():
         self.current_shape = self.tetriminos[0]
         if len(self.tetriminos) < 5:
             self.random_tetriminos()
-        self.current_shape.x = grid_size*3
-        self.current_shape.y = -(2*grid_size)
+        self.current_shape.x = x_grid + 3 * grid_size
+        self.current_shape.y = -(2*grid_size) + y_grid
 
     def game_over(self):
         for cell in self.grid[0]:
@@ -111,15 +108,13 @@ class Tetris():
         row_score = 0
         self.cleared_rows = []
 
-        print("calculate_score aangeroepen")
-
 
 class Tetrimino():
     def __init__(self, shape, color, level):
-        self.x = grid_size * 3
+        self.x = x_grid + 3 * grid_size
         self.max_x = 0
         self.min_x = 4
-        self.y = -(2*grid_size)
+        self.y = -(2*grid_size) + y_grid
         self.max_y = 0
 
         self.ghost_y = self.y
@@ -141,25 +136,26 @@ class Tetrimino():
     def draw(self):
         for y, row in enumerate(self.shape[self.rotation]):
             for x, cube in enumerate(row):
-                if cube == 1:
-                    self.min_x = min(self.min_x, x)
-                    self.max_x = max(self.max_x, x)
-                    self.max_y = max(self.max_y, y)
-                    rect = pygame.Rect(self.x + x * grid_size, self.y + y *grid_size, grid_size, grid_size)
-                    pygame.draw.rect(screen, self.color, rect)
+                if self.y + y * grid_size >= y_grid:
+                    if cube == 1:
+                        self.min_x = min(self.min_x, x)
+                        self.max_x = max(self.max_x, x)
+                        self.max_y = max(self.max_y, y)
+                        rect = pygame.Rect(self.x + x * grid_size, self.y + y *grid_size, grid_size, grid_size)
+                        pygame.draw.rect(screen, self.color, rect)
         
 
     def move_down(self, tetris, spatie, arrow_down):
         self.start_y = self.y
         self.fall_time += delta_time
         if spatie:
-            while not (self.y + (self.max_y+1) * grid_size >= height or self.check_grid(tetris, self.y, 0, 1, 0)):
+            while not self.check_grid(tetris, self.y, 0, 1, 0):
                 self.y += grid_size
 
             for y in range(0, 4):
                 for x in range(0, 4):
                     if ((self.shape[self.rotation])[y])[x] == 1:
-                        tetris.grid[(self.y // grid_size) + y + 2][(self.x // grid_size)+ x] = self.color
+                        tetris.grid[((self.y - y_grid) // grid_size) + y + 2][((self.x - x_grid) // grid_size)+ x] = self.color
 
             self.end_y = self.y
             self.fall_time = 0
@@ -169,11 +165,11 @@ class Tetrimino():
             return
 
         elif self.fall_time >= self.fall_speed:
-            if self.y + (self.max_y+1) * grid_size >= height or self.check_grid(tetris, self.y, 0, 1, 0):
+            if self.y - y_grid + (self.max_y+1) * grid_size >= height_grid or self.check_grid(tetris, self.y, 0, 1, 0):
                 for y in range(0, 4):
                     for x in range(0, 4):
                         if ((self.shape[self.rotation])[y])[x] == 1:
-                            tetris.grid[(self.y // grid_size) + y + 2][(self.x // grid_size)+ x] = self.color
+                            tetris.grid[((self.y - y_grid) // grid_size) + y + 2][(self.x - x_grid) // grid_size + x] = self.color
                 self.fall_time = 0
                 tetris.check_full_rows()
                 return
@@ -183,8 +179,6 @@ class Tetrimino():
             if arrow_down:
                 tetris.score += 1 * tetris.level
                 # soft drop score
-
-        
 
     def move_horizontal(self, tetris):
         self.movement_time += delta_time
@@ -213,24 +207,28 @@ class Tetrimino():
         self.min_x, self.max_x, self.max_y = 4,0,0
     
     def check_grid(self, tetris, huidige_y, left_or_right, down, rotation):
+        # Gaat door alle cellen van de tetromino stuk
         for x in range(0, 4):
             for y in range(0, 4):
-                new_x = (self.x // grid_size) + x + left_or_right
-                new_y = (huidige_y // grid_size) + y + 2 + down
+                # maakt een x en y waarmee gecheckt wordt of de tetrimino buiten de grid gaat
+                new_x = ((self.x - x_grid) // grid_size) + x + left_or_right
+                new_y = ((huidige_y - y_grid) // grid_size) + y + 2 + down
                 if self.shape[(self.rotation+rotation) % len(self.shape)][y][x] == 1:
-                    if new_x * grid_size + grid_size > width or new_x * grid_size < 0 or new_y >= 22 or tetris.grid[new_y][new_x] != 0:
+                    if new_x * grid_size + grid_size > width_grid or new_x * grid_size < 0 or new_y >= 22 or tetris.grid[new_y][new_x] != 0:
                             return True
         return False
     
     def ghost_piece(self, tetris):
         self.ghost_y = self.y
-        while not (self.ghost_y + (self.max_y+1) * grid_size >= height or self.check_grid(tetris, self.ghost_y, 0, 1, 0)):
+        while not self.check_grid(tetris, self.ghost_y, 0, 1, 0):
                 self.ghost_y += grid_size
+
         for y, row in enumerate(self.shape[self.rotation]):
             for x, cube in enumerate(row):
-                if cube == 1:
-                    rect = pygame.Rect(self.x + x * grid_size, self.ghost_y + y *grid_size, grid_size, grid_size)
-                    pygame.draw.rect(screen, self.color, rect, width_ghost)
+                if self.ghost_y + y * grid_size >= y_grid:
+                    if cube == 1:
+                        rect = pygame.Rect(self.x + x * grid_size, self.ghost_y + y *grid_size, grid_size, grid_size)
+                        pygame.draw.rect(screen, self.color, rect, width_ghost)
 
     def distance_traveled(self):
         return (self.end_y - self.start_y) // grid_size

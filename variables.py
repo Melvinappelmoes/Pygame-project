@@ -21,7 +21,7 @@ grid_size = width_grid // 10
 width_ghost = 2
 
 # screen
-width_screen = 800
+width_screen = 780
 heigth_screen = 600 + 2*grid_size
 
 # location grid
@@ -31,14 +31,15 @@ y_grid = grid_size
 # maakt het scherm en de klok
 screen = pygame.display.set_mode((width_screen, heigth_screen))
 rect_grid = pygame.Rect(x_grid, y_grid, width_grid, height_grid)
-
 pygame.display.set_caption('Tetris')
 logo = pygame.image.load("tetris_logo.png")
 pygame.display.set_icon(logo)
 clock = pygame.time.Clock()
 
+# font
 font = pygame.font.SysFont("arial", 25)
 
 fps = 60
 
+# verstreken tijd sinds laatste keer op geroepen
 delta_time = clock.tick(60) / 1000

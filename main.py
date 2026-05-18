@@ -18,7 +18,7 @@ arrow_down = False
 # main gameloop
 running = True
 while running:
-    running = tetris.game_over()
+    running,end_screen = tetris.game_over()
     current = tetris.current_shape
     tetris.calculate_level()
     for event in pygame.event.get():
@@ -35,7 +35,7 @@ while running:
                 current.fall_speed *= (1/20)
                 arrow_down = True
             if event.key == pygame.K_ESCAPE:
-                tetris.pause()
+                running = tetris.pause()
     
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
@@ -46,6 +46,7 @@ while running:
     pygame.draw.rect(screen, BLACK, rect_grid)
 
     tetris.print_text()
+    tetris.next_queue()
     
     if tetris.clearing:
         tetris.clear_rows()
@@ -61,5 +62,19 @@ while running:
 
     tetris.draw_grid()
 
+    clock.tick(fps)
+    pygame.display.flip()
+
+
+
+while end_screen:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT: 
+            end_screen = False
+    screen.fill(DARK_GREY)
+    game_over_text = font.render("GAME OVER", True, WHITE)
+    screen.blit(game_over_text, (width_screen//2 - game_over_text.get_width()//2, heigth_screen//2 - grid_size))
+    score = font.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
+    screen.blit(score, (width_screen//2 - score.get_width()//2, heigth_screen//2))
     clock.tick(fps)
     pygame.display.flip()

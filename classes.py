@@ -81,19 +81,24 @@ class Tetris():
     def game_over(self):
         for cell in self.grid[0]:
             if cell != 0:
-                return False
+                return False, True
         for cell in self.grid[1]:
             if cell != 0:
-                return False
-        return True
+                return False, True
+        return True, False
     
     def pause(self):
+        # ff kijken hoe we een pauze menu kunnen maken
+        # blijft in de loop totdat er weer op esc geklikt wordt, daarna gaat het spel verder
         paused = True
         while paused:
             for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return False
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         paused = False
+                        return True
     
     def calculate_score(self, tetrimino):
         self.score += tetrimino.distance * 2 * self.level
@@ -102,6 +107,7 @@ class Tetris():
         # checkt hoeveel rijen er weggehaald zijn
         # als er een tetris is gehaald (4 rijen weg) dan moet de volgende tetris *1.5
         row_score = 0
+        # kijkt hoelang de lijst is die gecleared is en dus hoeveel rijen er weg zijn gehaald
         if self.cleared_rows == 1:
             row_score = 100
             self.back_to_back = False
@@ -125,6 +131,7 @@ class Tetris():
         self.cleared_rows = 0
 
     def calculate_level(self):
+        # doet 1 level per 10 rows cleared
         self.level = 1 + self.total_rows_cleared // 10
 
     def print_text(self):
@@ -155,11 +162,29 @@ class Tetris():
         lines = font.render(f"{self.total_rows_cleared}", True, WHITE)
         screen.blit(lines, (x_text - lines.get_width() // 2, y_text + 5 * grid_size + 2 * spacing))
 
+    def next_queue(self):
+        for i in range(0, 3):
+            for y, row in enumerate(self.tetriminos[i+1].shape[0]):
+                for x, cube in enumerate(row):
+                    if cube == 1:
+                        # tekent de volgende 3 blokken naast de grid door door de tetriminos lijst heen te lopen
+                        next_x = width_screen // 2 + width_grid // 2 + x * grid_size + 2 * grid_size
+                        next_y = heigth_screen // 2 - height_grid//2 + y * grid_size + 3* i * grid_size + 3 * grid_size
+                        rect = pygame.Rect(next_x, next_y, grid_size, grid_size)
+                        pygame.draw.rect(screen, self.tetriminos[i+1].color, rect)
+                        pygame.draw.rect(screen, GREY, rect, 1)
+
+        # tekent het woord "NEXT" boven de tetriminos
+        next_text = font.render("NEXT", True, WHITE)
+        screen.blit(next_text, (x_grid + width_screen // 2, 2 * grid_size))
+
+
 class Tetrimino():
     def __init__(self, shape, color, level):
         self.x = x_grid + 3 * grid_size
         self.max_x = 0
         self.min_x = 4
+        # plaatst de tetrimino 2 blokjes boven de grid
         self.y = -(2*grid_size) + y_grid
         self.max_y = 0
 
@@ -170,6 +195,7 @@ class Tetrimino():
         self.rotation = 0
 
         self.fall_time = 0
+        # formule om de val snelheid te berekenen
         self.fall_speed = (0.8 - ((level - 1) * 0.007))**(level-1)
         self.movement_time = 0
         self.movement_delay = 0.1
@@ -180,6 +206,7 @@ class Tetrimino():
         self.distance = 0
 
     def draw(self):
+        # loopt door de rij en colom van de shape van de tetrimino
         for y, row in enumerate(self.shape[self.rotation]):
             for x, cube in enumerate(row):
                 # alleen als de cel binnen de grid zit moet hij worden laten zien

@@ -3,13 +3,12 @@ from classes import *
 from variables import *
 pygame.init()
 
+
 # to do:
-# - Punten systeem met level up systeem
-# - Game over systeem (checken of er een 1 in de bovenste rij zit)
+# - Shapes in database??
 # - High score opslaan (SQL)
 # - Menu
-# - Volgende tetriminos laten zien
-# - Een hold cel
+# - Volgende tetriminos laten zien (miss nog ietsje mooier)
 # - MUZIEK
 
 tetris = Tetris()
@@ -36,6 +35,9 @@ while running:
                 arrow_down = True
             if event.key == pygame.K_ESCAPE:
                 running = tetris.pause()
+            if event.key == pygame.K_c:
+                tetris.hold_cell()
+                tetris.hold_available = False
     
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
@@ -47,11 +49,12 @@ while running:
 
     tetris.print_text()
     tetris.next_queue()
-    
+    tetris.draw_hold_cell()
     if tetris.clearing:
         tetris.clear_rows()
     elif tetris.spawn_ready:
         tetris.spawn_block()
+        tetris.hold_available = True
         tetris.spawn_ready = False
         current = tetris.current_shape
     else: 

@@ -1,5 +1,6 @@
 import pygame
 pygame.font.init()
+pygame.init()
 
 # maakt alle benodigde kleuren
 GREY = (75, 75, 75)
@@ -35,6 +36,18 @@ pygame.display.set_caption('Tetris')
 logo = pygame.image.load("tetris_logo.png")
 pygame.display.set_icon(logo)
 clock = pygame.time.Clock()
+
+# kan je het geluidsniveau aanpassen (tussen 0.0 en 1.0)
+geluidsniveau = 0.3
+pygame.mixer.music.set_volume(geluidsniveau)
+
+# maakt de standaard muziek
+pygame.mixer.music.load("Tetris_muziek.mp3")
+pygame.mixer.music.play(-1)
+
+# maakt de sound effects
+sound_stage_clear = pygame.mixer.Sound('Tetris_stage_clear.mp3')
+sound_game_over = pygame.mixer.Sound('Tetris_game_over.mp3')
 
 # font
 font = pygame.font.SysFont("arial", 25)

@@ -5,9 +5,12 @@ from shapes import shapes
 class Tetris():
     def __init__(self):
         self.level = 1
+        self.level_check = 1
         self.tetriminos = [] # Dit is de soort van bag
         self.random_tetriminos() 
         self.current_shape = self.tetriminos[0]
+        self.hold_shape = []
+        self.hold_available = True
         self.score = 0
         self.grid = []
         self.make_grid()
@@ -19,6 +22,8 @@ class Tetris():
         self.cleared_rows = 0
         self.total_rows_cleared = 0
         self.back_to_back = False
+        self.back_true = 0
+
 
     def random_tetriminos(self):
         temp_shapes = shapes
@@ -52,9 +57,10 @@ class Tetris():
             self.clearing = True
             self.cleared_rows = len(self.rows_to_clear)
             self.total_rows_cleared += len(self.rows_to_clear)
+            self.calculate_score(self.current_shape)
         else:
             self.spawn_ready = True
-        self.calculate_score(self.current_shape)
+
 
     def clear_rows(self):
         self.clear_timer += delta_time
@@ -81,12 +87,20 @@ class Tetris():
     def game_over(self):
         for cell in self.grid[0]:
             if cell != 0:
+                self.sound_game_over_play()
                 return False, True
+
         for cell in self.grid[1]:
             if cell != 0:
+                self.sound_game_over_play()
                 return False, True
         return True, False
     
+    def sound_game_over_play(self):
+            sound_game_over.play()
+            pygame.mixer.music.load('Tetris_ending.mp3')
+            pygame.mixer.music.play(-1)
+
     def pause(self):
         # ff kijken hoe we een pauze menu kunnen maken
         # blijft in de loop totdat er weer op esc geklikt wordt, daarna gaat het spel verder
@@ -101,38 +115,39 @@ class Tetris():
                         return True
     
     def calculate_score(self, tetrimino):
-        self.score += tetrimino.distance * 2 * self.level
-        tetrimino.distance = 0
 
         # checkt hoeveel rijen er weggehaald zijn
         # als er een tetris is gehaald (4 rijen weg) dan moet de volgende tetris *1.5
         row_score = 0
-        # kijkt hoelang de lijst is die gecleared is en dus hoeveel rijen er weg zijn gehaald
-        if self.cleared_rows == 1:
-            row_score = 100
-            self.back_to_back = False
-        if self.cleared_rows == 2:
-            row_score = 300
-            self.back_to_back = False
-        if self.cleared_rows == 3:
-            row_score = 500
-            self.back_to_back = False
-        if self.cleared_rows == 4:
-            row_score = 800
-            self.back_to_back = True
+
+        score_back = {1:(100, False), 2:(300, False), 3:(500, False), 4:(800, True)}
+
+        row_score = score_back[self.cleared_rows][0]
+        self.back_to_back = score_back[self.cleared_rows][1]
 
         # als er een back to back is dan gaat de score * 1.5 en level en anders alleen de level
+        
         if self.back_to_back:
-            self.score += row_score * 1.5 * self.level
-        else:
-            self.score += row_score * self.level
+            self.back_true += 1
+            if self.back_true == 2:
+                self.score += row_score * 1.5 * self.level
+                self.back_true = 1
+            else:
+                self.score += row_score * self.level
 
-        row_score = 0
+        else: 
+            self.score += row_score * self.level
+            self.back_true = 0
+
         self.cleared_rows = 0
 
     def calculate_level(self):
         # doet 1 level per 10 rows cleared
         self.level = 1 + self.total_rows_cleared // 10
+
+        if self.level_check != self.level:
+            sound_stage_clear.play()
+        self.level_check = self.level
 
     def print_text(self):
         # de x van de tekst is tussen de grid en rand van scherm in
@@ -143,8 +158,8 @@ class Tetris():
         spacing = 10
 
         # miss om een vierkant om de tekst heen te stoppen
-        # rect = pygame.Rect(x_text - 2 * grid_size, y_text - spacing, 4 * grid_size, 220)
-        # pygame.draw.rect(screen, WHITE, rect, 1)
+        rect = pygame.Rect(x_text - 2 * grid_size, y_text - spacing, 4 * grid_size, 220)
+        pygame.draw.rect(screen, WHITE, rect, 1)
 
         # rendered de text: "SCORE" en laat het op de juiste plek zien met blit
         score_text = font.render("SCORE", True, WHITE)
@@ -169,14 +184,50 @@ class Tetris():
                     if cube == 1:
                         # tekent de volgende 3 blokken naast de grid door door de tetriminos lijst heen te lopen
                         next_x = width_screen // 2 + width_grid // 2 + x * grid_size + 2 * grid_size
-                        next_y = heigth_screen // 2 - height_grid//2 + y * grid_size + 3* i * grid_size + 3 * grid_size
+                        next_y = heigth_screen // 2 - height_grid// 2 + y * grid_size + 3 * i * grid_size + 3 * grid_size
                         rect = pygame.Rect(next_x, next_y, grid_size, grid_size)
                         pygame.draw.rect(screen, self.tetriminos[i+1].color, rect)
                         pygame.draw.rect(screen, GREY, rect, 1)
 
         # tekent het woord "NEXT" boven de tetriminos
         next_text = font.render("NEXT", True, WHITE)
-        screen.blit(next_text, (x_grid + width_screen // 2, 2 * grid_size))
+        screen.blit(next_text, (x_grid + width_screen // 2, 2 * grid_size))      
+
+
+
+    def hold_cell(self):
+        if self.hold_available:
+            self.hold_shape.append(self.current_shape)
+            
+            if len(self.hold_shape) == 1:
+                self.tetriminos.pop(0)
+                self.current_shape = self.tetriminos[0]
+                self.current_shape.x = x_grid + 3 * grid_size
+                self.current_shape.y = -(2*grid_size) + y_grid
+
+            elif len(self.hold_shape) >= 2:
+                self.tetriminos.pop(0)
+                self.current_shape = self.hold_shape[0]
+                self.hold_shape.pop(0)
+                self.current_shape.x = x_grid + 3 * grid_size
+                self.current_shape.y = -(2*grid_size) + y_grid
+            
+            
+    def draw_hold_cell(self):
+        # tekent het woord "HOLD (C)" boven de hold cell
+        hcell_text = font.render("HOLD (C)", True, WHITE)
+        screen.blit(hcell_text, (x_grid // 2 - hcell_text.get_width() // 2, 2 * grid_size))
+
+        if self.hold_shape:
+            for y, row in enumerate(self.hold_shape[0].shape[0]):
+                for x, cube in enumerate(row):
+                    if cube == 1:
+        
+                        hold_x = (x_grid // 2) - (hcell_text.get_width() // 2) + (x * grid_size)
+                        hold_y = (4 * grid_size) + (y * grid_size)
+                        rect = pygame.Rect(hold_x, hold_y, grid_size, grid_size)
+                        pygame.draw.rect(screen, self.hold_shape[0].color, rect)
+                        pygame.draw.rect(screen, GREY, rect, 1)
 
 
 class Tetrimino():
@@ -235,7 +286,8 @@ class Tetrimino():
             self.fall_time = 0
             tetris.check_full_rows()
             self.distance = self.distance_traveled()
-            tetris.calculate_score(self)
+            tetris.score += self.distance * 2 * tetris.level
+            self.distance = 0
             return
 
         elif self.fall_time >= self.fall_speed:

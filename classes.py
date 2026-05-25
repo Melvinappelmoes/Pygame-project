@@ -1,4 +1,4 @@
-import random
+import random, sqlite3
 from variables import *
 from shapes import shapes
 
@@ -23,6 +23,9 @@ class Tetris():
         self.total_rows_cleared = 0
         self.back_to_back = False
         self.back_true = 0
+        self.state = "menu"
+        self.mute = ["sound_on", "mute"]
+        self.mute_i = 0
 
 
     def random_tetriminos(self):
@@ -37,14 +40,16 @@ class Tetris():
             self.grid.append([])
             for x in range(0, width_grid // grid_size):
                 self.grid[y].append(0)
+        
+        self.empty_grid = self.grid
 
-    def draw_grid(self):
+    def draw_grid(self, grid):
         # Maakt de grid door, door het hele bord in rijen te gaan met stapsgrootte = grid_size
-        for row_index, row in enumerate(self.grid[2:]):
+        for row_index, row in enumerate(grid[2:]):
             for col_index, cell in enumerate(row):
                 rect = pygame.Rect(col_index *grid_size + x_grid , (row_index) *grid_size + y_grid, grid_size, grid_size)
                 if cell != 0:
-                    pygame.draw.rect(screen, self.grid[row_index+2][col_index], rect)
+                    pygame.draw.rect(screen, grid[row_index+2][col_index], rect)
                 pygame.draw.rect(screen, GREY, rect, 1)
 
     def check_full_rows(self):
@@ -60,7 +65,6 @@ class Tetris():
             self.calculate_score(self.current_shape)
         else:
             self.spawn_ready = True
-
 
     def clear_rows(self):
         self.clear_timer += delta_time
@@ -88,34 +92,19 @@ class Tetris():
         for cell in self.grid[0]:
             if cell != 0:
                 self.sound_game_over_play()
-                return False, True
+                self.state = "game over"
 
         for cell in self.grid[1]:
             if cell != 0:
                 self.sound_game_over_play()
-                return False, True
-        return True, False
+                self.state = "game over"
     
     def sound_game_over_play(self):
             sound_game_over.play()
             pygame.mixer.music.load('Tetris_ending.mp3')
             pygame.mixer.music.play(-1)
-
-    def pause(self):
-        # ff kijken hoe we een pauze menu kunnen maken
-        # blijft in de loop totdat er weer op esc geklikt wordt, daarna gaat het spel verder
-        paused = True
-        while paused:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    return False
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        paused = False
-                        return True
     
     def calculate_score(self, tetrimino):
-
         # checkt hoeveel rijen er weggehaald zijn
         # als er een tetris is gehaald (4 rijen weg) dan moet de volgende tetris *1.5
         row_score = 0
@@ -143,7 +132,7 @@ class Tetris():
 
     def calculate_level(self):
         # doet 1 level per 10 rows cleared
-        self.level = 1 + self.total_rows_cleared // 10
+        self.level = min(30, 1 + self.total_rows_cleared // 10)
 
         if self.level_check != self.level:
             sound_stage_clear.play()
@@ -156,10 +145,6 @@ class Tetris():
         y_text =  height_grid // 2 + 3 * grid_size
         # bepaalt hoeveel ruimte er tussen de variabelen inzit
         spacing = 10
-
-        # miss om een vierkant om de tekst heen te stoppen
-        rect = pygame.Rect(x_text - 2 * grid_size, y_text - spacing, 4 * grid_size, 220)
-        pygame.draw.rect(screen, WHITE, rect, 1)
 
         # rendered de text: "SCORE" en laat het op de juiste plek zien met blit
         score_text = font.render("SCORE", True, WHITE)
@@ -177,17 +162,22 @@ class Tetris():
         lines = font.render(f"{self.total_rows_cleared}", True, WHITE)
         screen.blit(lines, (x_text - lines.get_width() // 2, y_text + 5 * grid_size + 2 * spacing))
 
-    def next_queue(self):
-        for i in range(0, 3):
-            for y, row in enumerate(self.tetriminos[i+1].shape[0]):
-                for x, cube in enumerate(row):
-                    if cube == 1:
-                        # tekent de volgende 3 blokken naast de grid door door de tetriminos lijst heen te lopen
-                        next_x = width_screen // 2 + width_grid // 2 + x * grid_size + 2 * grid_size
-                        next_y = heigth_screen // 2 - height_grid// 2 + y * grid_size + 3 * i * grid_size + 3 * grid_size
-                        rect = pygame.Rect(next_x, next_y, grid_size, grid_size)
-                        pygame.draw.rect(screen, self.tetriminos[i+1].color, rect)
-                        pygame.draw.rect(screen, GREY, rect, 1)
+        #vierkant om de tekst heen
+        rect = pygame.Rect(x_text - 2.5 * grid_size, y_text - spacing, 5 * grid_size, 215)
+        pygame.draw.rect(screen, GREY, rect, 2)
+
+    def next_queue(self, filled):
+        if filled:
+            for i in range(0, 3):
+                for y, row in enumerate(self.tetriminos[i+1].shape[0]):
+                    for x, cube in enumerate(row):
+                        if cube == 1:
+                            # tekent de volgende 3 blokken naast de grid door door de tetriminos lijst heen te lopen
+                            next_x = width_screen // 2 + width_grid // 2 + x * grid_size + 2 * grid_size
+                            next_y = heigth_screen // 2 - height_grid// 2 + y * grid_size + 3 * i * grid_size + 3 * grid_size
+                            rect = pygame.Rect(next_x, next_y, grid_size, grid_size)
+                            pygame.draw.rect(screen, self.tetriminos[i+1].color, rect)
+                            pygame.draw.rect(screen, GREY, rect, 1)
 
         # tekent het woord "NEXT" boven de tetriminos
         next_text = font.render("NEXT", True, WHITE)
@@ -213,21 +203,63 @@ class Tetris():
                 self.current_shape.y = -(2*grid_size) + y_grid
             
             
-    def draw_hold_cell(self):
+    def draw_hold_cell(self, filled):
         # tekent het woord "HOLD (C)" boven de hold cell
         hcell_text = font.render("HOLD (C)", True, WHITE)
         screen.blit(hcell_text, (x_grid // 2 - hcell_text.get_width() // 2, 2 * grid_size))
 
-        if self.hold_shape:
-            for y, row in enumerate(self.hold_shape[0].shape[0]):
-                for x, cube in enumerate(row):
-                    if cube == 1:
-        
-                        hold_x = (x_grid // 2) - (hcell_text.get_width() // 2) + (x * grid_size)
-                        hold_y = (4 * grid_size) + (y * grid_size)
-                        rect = pygame.Rect(hold_x, hold_y, grid_size, grid_size)
-                        pygame.draw.rect(screen, self.hold_shape[0].color, rect)
-                        pygame.draw.rect(screen, GREY, rect, 1)
+        rect = pygame.Rect(x_grid // 2 - 2.5 * grid_size, 2* grid_size - 10, 5 * grid_size, 3*grid_size + hcell_text.get_height() + 20)
+        pygame.draw.rect(screen, GREY, rect, 2)
+
+        # shape_width = (max_x - min_x + 1) * grid_size
+        # start_x = cell_left + (cell_width - shape_width) // 2
+        # hold_x = start_x + (x - min_x) * grid_size
+
+        if filled:
+            if self.hold_shape:
+                for y, row in enumerate(self.hold_shape[0].shape[0]):
+                    for x, cube in enumerate(row):
+                        if cube == 1:
+                            hold_x = x_grid//2 - 2.5 * grid_size + (x * grid_size) + 15
+                            hold_y = hcell_text.get_height() + 2 * grid_size + (y * grid_size) + 10
+                            rect = pygame.Rect(hold_x, hold_y, grid_size, grid_size)
+                            pygame.draw.rect(screen, self.hold_shape[0].color, rect)
+                            pygame.draw.rect(screen, GREY, rect, 1)
+
+    def start_screen(self, mouse):
+        self.print_text()
+        self.next_queue(False)
+        self.draw_hold_cell(False)
+
+        pygame.draw.rect(screen, BLACK, rect_grid)
+
+        screen.blit(logo, (x_grid + width_grid//2 - logo.get_width()//2, y_grid + 10))
+
+        if play_rect.left <= mouse[0] <= play_rect.right and play_rect.top <= mouse[1] <= play_rect.bottom:
+            pygame.draw.rect(screen, LIGHTER_DARK_GREEN, play_rect)
+            pygame.draw.rect(screen, WHITE, play_rect, 1)
+        else:
+            pygame.draw.rect(screen, DARK_GREEN, play_rect)
+        play_text = font.render("PLAY", True, WHITE)
+        screen.blit(play_text, (play_rect.centerx - play_text.get_width()//2, play_rect.centery - play_text.get_height()//2))
+
+        if level_rect.left <= mouse[0] <= level_rect.right and level_rect.top <= mouse[1] <= level_rect.bottom:
+            pygame.draw.rect(screen, LIGHTER_GREY, level_rect)
+            pygame.draw.rect(screen, WHITE, level_rect, 1)
+        else:
+            pygame.draw.rect(screen, GREY, level_rect)
+        level_text = font.render(f"LEVEL: {self.level}", True, WHITE)
+        screen.blit(level_text, (level_rect.centerx - level_text.get_width()//2, level_rect.centery - level_text.get_height()//2))
+
+        if settings_rect.left <= mouse[0] <= settings_rect.right and settings_rect.top <= mouse[1] <= settings_rect.bottom:
+            pygame.draw.rect(screen, LIGHTER_GREY, settings_rect)
+            pygame.draw.rect(screen, WHITE, settings_rect, 1)
+        else:
+            pygame.draw.rect(screen, GREY, settings_rect)
+
+        pygame.draw.rect(screen, LIGHTER_GREY, high_scores_rect, 1)
+        settings = pygame.transform.scale(pygame.image.load(f"{self.mute[self.mute_i]}.png"), (40, 40))
+        screen.blit(settings, (settings_rect.x + 5, settings_rect.y + 5))
 
 
 class Tetrimino():
@@ -358,3 +390,7 @@ class Tetrimino():
 
     def distance_traveled(self):
         return (self.end_y - self.start_y) // grid_size
+    
+class Highscores():
+    def __init__(self):
+        self.conn = sqlite3.connect("High_scores.db")

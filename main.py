@@ -52,11 +52,8 @@ while running:
         tetris.draw_grid(tetris.empty_grid)
 
         tetris.print_text()
-        next_text = font.render("NEXT", True, WHITE)
-        screen.blit(next_text, (x_grid + width_screen // 2, 2 * grid_size)) 
-
-        hcell_text = font.render("HOLD (C)", True, WHITE)
-        screen.blit(hcell_text, (x_grid // 2 - hcell_text.get_width() // 2, 2 * grid_size))
+        tetris.next_queue(False)
+        tetris.draw_hold_cell(False)
 
         clock.tick(fps)
         pygame.display.flip()
@@ -120,8 +117,8 @@ while running:
         screen.fill(DARK_GREY)
 
         tetris.print_text()
-        tetris.next_queue()
-        tetris.draw_hold_cell()
+        tetris.next_queue(True)
+        tetris.draw_hold_cell(True)
         pygame.draw.rect(screen, BLACK, rect_grid)
         tetris.draw_grid(tetris.grid)
         

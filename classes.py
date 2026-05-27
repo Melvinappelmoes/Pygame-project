@@ -27,7 +27,6 @@ class Tetris():
         self.mute = ["sound_on", "mute"]
         self.mute_i = 0
 
-
     def random_tetriminos(self):
         temp_shapes = shapes
         random.shuffle(temp_shapes)
@@ -41,7 +40,8 @@ class Tetris():
             for x in range(0, width_grid // grid_size):
                 self.grid[y].append(0)
         
-        self.empty_grid = self.grid
+        # maakt een copy van de grid die leeg blijft
+        self.empty_grid = [row.copy() for row in self.grid]
 
     def draw_grid(self, grid):
         # Maakt de grid door, door het hele bord in rijen te gaan met stapsgrootte = grid_size
@@ -183,8 +183,6 @@ class Tetris():
         next_text = font.render("NEXT", True, WHITE)
         screen.blit(next_text, (x_grid + width_screen // 2, 2 * grid_size))      
 
-
-
     def hold_cell(self):
         if self.hold_available:
             self.hold_shape.append(self.current_shape)
@@ -200,8 +198,7 @@ class Tetris():
                 self.current_shape = self.hold_shape[0]
                 self.hold_shape.pop(0)
                 self.current_shape.x = x_grid + 3 * grid_size
-                self.current_shape.y = -(2*grid_size) + y_grid
-            
+                self.current_shape.y = -(2*grid_size) + y_grid          
             
     def draw_hold_cell(self, filled):
         # tekent het woord "HOLD (C)" boven de hold cell

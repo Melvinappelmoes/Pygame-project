@@ -45,7 +45,9 @@ play_rect = pygame.Rect(width_screen//2 - 100, y_grid + logo.get_height() + 20, 
 level_rect = pygame.Rect(width_screen//2 - 100, play_rect.bottom + 10, 200, 50)
 settings_rect = pygame.Rect(x_grid + width_grid - 60, height_grid + y_grid - 60, 50, 50)
 high_scores_rect = pygame.Rect(width_screen//2 - 140, level_rect.bottom + 10, width_grid - 20, settings_rect.top - 20 - level_rect.bottom)
-game_over_rect = pygame.Rect(width_screen//2 - 100, heigth_screen//2 - 50, 200, 100)
+game_over_rect = pygame.Rect(width_screen//2 - 100, heigth_screen//2 - 75, 200, 150)
+home_rect = pygame.Rect(width_screen//2 - 90, heigth_screen//2 + 15, 50, 50)
+replay_rect = pygame.Rect(width_screen//2 - 30, heigth_screen//2 + 15, 50, 50)
 
 # kan je het geluidsniveau aanpassen (tussen 0.0 en 1.0)
 geluidsniveau = 0.3
@@ -58,6 +60,8 @@ pygame.mixer.music.play(-1)
 # maakt de sound effects
 sound_stage_clear = pygame.mixer.Sound('Tetris_stage_clear.mp3')
 sound_game_over = pygame.mixer.Sound('Tetris_game_over.mp3')
+sound_stage_clear.set_volume(geluidsniveau)
+sound_game_over.set_volume(geluidsniveau)
 
 # font
 font = pygame.font.SysFont("Kijs", 37)

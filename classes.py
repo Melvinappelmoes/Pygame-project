@@ -11,7 +11,7 @@ class Tetris():
         self.current_shape = self.tetriminos[0]
         self.hold_shape = []
         self.hold_available = True
-        self.score = 0
+        self.score = 4500
         self.grid = []
         self.make_grid()
         self.rows_to_clear = []
@@ -123,7 +123,6 @@ class Tetris():
                 self.back_true = 1
             else:
                 self.score += row_score * self.level
-
         else: 
             self.score += row_score * self.level
             self.back_true = 0
@@ -181,7 +180,9 @@ class Tetris():
 
         # tekent het woord "NEXT" boven de tetriminos
         next_text = font.render("NEXT", True, WHITE)
-        screen.blit(next_text, (x_grid + width_screen // 2, 2 * grid_size))      
+        screen.blit(next_text, (x_grid + width_screen // 2, 2 * grid_size)) 
+        next_rect = pygame.Rect(x_grid//2 + width_screen // 2 + 2.5 * grid_size,  2* grid_size - 10, 5 * grid_size, 10*grid_size + next_text.get_height() + 20)
+        pygame.draw.rect(screen, GREY, next_rect, 1)
 
     def hold_cell(self):
         if self.hold_available:
@@ -258,6 +259,8 @@ class Tetris():
         settings = pygame.transform.scale(pygame.image.load(f"{self.mute[self.mute_i]}.png"), (40, 40))
         screen.blit(settings, (settings_rect.x + 5, settings_rect.y + 5))
 
+    def high_scores(self, highscores):
+        pass
 
 class Tetrimino():
     def __init__(self, shape, color, level):
@@ -297,8 +300,7 @@ class Tetrimino():
                         self.max_y = max(self.max_y, y)
                         rect = pygame.Rect(self.x + x * grid_size, self.y + y *grid_size, grid_size, grid_size)
                         pygame.draw.rect(screen, self.color, rect)
-        
-
+  
     def move_down(self, tetris, spatie, arrow_down):
         self.start_y = self.y
         self.fall_time += delta_time
@@ -390,4 +392,25 @@ class Tetrimino():
     
 class Highscores():
     def __init__(self):
-        self.conn = sqlite3.connect("High_scores.db")
+        self.db = sqlite3.connect("High_scores.s3db")
+        self.db.execute("CREATE TABLE IF NOT EXISTS highscores (`id` INTEGER PRIMARY KEY, name TEXT, score INT)")
+        count = self.db.execute("SELECT COUNT(*) FROM highscores").fetchone()[0]
+        if count == 0:
+            scores = [5000, 4000, 3000, 2000, 1000]
+            for score in scores:
+                self.db.execute("INSERT INTO highscores (name, score) VALUES (?, ?)", ["", score])
+            self.db.commit()
+    
+    def new_high_score(self, tetris, naam):
+        cursor = self.db.execute("SELECT score FROM highscores")
+        scores = cursor.fetchall()
+        for score in [row[0] for row in scores]:
+            if tetris.score > score:
+                self.db.execute("INSERT INTO highscores (name, score) VALUES (?, ?)", [naam, tetris.score])
+                self.db.execute("DELETE FROM highscores WHERE id not in (SELECT id FROM highscores ORDER BY score DESC LIMIT 5)")
+                self.db.commit()
+                break
+
+    def get_highscores(self):
+        highscores = self.db.execute("SELECT name, score FROM highscores ORDER BY score DESC").fetchall()
+        return highscores

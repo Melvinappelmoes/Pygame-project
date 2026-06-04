@@ -1,16 +1,15 @@
-import pygame
+import pygame, sqlite3
 from classes import *
 from variables import *
 pygame.init()
 
 
 # to do:
-# - Shapes in database??
 # - High score opslaan (SQL)
-# - Menu
-# - Volgende tetriminos laten zien (miss nog ietsje mooier)
-# - MUZIEK
-# beginnen op een ander level
+# - Pauze menu
+# - Aftellen voor starten
+# - MUZIEK zelluf
+
 
 tetris = Tetris()
 high_scores = Highscores()
@@ -19,6 +18,8 @@ arrow_down = False
 # main gameloop
 running = True
 while running:
+    # verstreken tijd sinds laatste keer op geroepen
+    delta_time = clock.tick(fps) / 1000
     pygame.mixer.music.set_volume(geluidsniveau)
     if tetris.state == "menu":
         mouse = pygame.mouse.get_pos()
@@ -27,9 +28,12 @@ while running:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if play_rect.left <= mouse[0] <= play_rect.right and play_rect.top <= mouse[1] <= play_rect.bottom:
+                    tetris.random_tetriminos() 
+                    tetris.current_shape = tetris.tetriminos[0]
                     tetris.state = "main"
                 if level_rect.left <= mouse[0] <= level_rect.right and level_rect.top <= mouse[1] <= level_rect.bottom:
-                    print("Dit zou eigenlijk de level moeten verhogen")
+                    tetris.level = tetris.level%30 + 1
+                    start_level = tetris.level + 1
                 if settings_rect.left <= mouse[0] <= settings_rect.right and settings_rect.top <= mouse[1] <= settings_rect.bottom:
                     tetris.mute_i = (tetris.mute_i + 1)%2
                     geluidsniveau = (geluidsniveau + 0.3)%0.6
@@ -85,7 +89,7 @@ while running:
         
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_DOWN:
-                    current.fall_speed = (0.8 - ((tetris.level - 1) * 0.007))**(tetris.level-1)
+                    current.fall_speed = fall_speeds[tetris.level-1]
                     arrow_down = False
 
         screen.fill(DARK_GREY)
@@ -114,7 +118,7 @@ while running:
     
     elif tetris.state == "game over":
         mouse = pygame.mouse.get_pos()
-        
+        restart = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
                 running = False
@@ -122,41 +126,46 @@ while running:
                 if home_rect.left <= mouse[0] <= home_rect.right and home_rect.top <= mouse[1] <= home_rect.bottom:
                     tetris = Tetris()
                     tetris.state = "menu"
+                    restart = True
                 if replay_rect.left <= mouse[0] <= replay_rect.right and replay_rect.top <= mouse[1] <= replay_rect.bottom:
                     tetris = Tetris()
+                    tetris.level = start_level
+                    tetris.random_tetriminos() 
+                    tetris.current_shape = tetris.tetriminos[0]
                     tetris.state = "main"
+                    restart = True
+        if not restart:
+            screen.fill(DARK_GREY)
+
+            tetris.print_text()
+            tetris.next_queue(True)
+            tetris.draw_hold_cell(True)
+            pygame.draw.rect(screen, BLACK, rect_grid)
+            tetris.draw_grid(tetris.grid)
+            
+            pygame.draw.rect(screen, BLACK, game_over_rect)
+            pygame.draw.rect(screen, WHITE, game_over_rect, 1)
         
-        screen.fill(DARK_GREY)
+            game_over_text = font.render("GAME OVER", True, WHITE)
+            screen.blit(game_over_text, (width_screen//2 - game_over_text.get_width()//2, heigth_screen//2 - 60))
+            score = font.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
+            screen.blit(score, (width_screen//2 - score.get_width()//2, heigth_screen//2 - 30))
 
-        tetris.print_text()
-        tetris.next_queue(True)
-        tetris.draw_hold_cell(True)
-        pygame.draw.rect(screen, BLACK, rect_grid)
-        tetris.draw_grid(tetris.grid)
-        
-        pygame.draw.rect(screen, BLACK, game_over_rect)
-        pygame.draw.rect(screen, WHITE, game_over_rect, 1)
-     
-        game_over_text = font.render("GAME OVER", True, WHITE)
-        screen.blit(game_over_text, (width_screen//2 - game_over_text.get_width()//2, heigth_screen//2 - 60))
-        score = font.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
-        screen.blit(score, (width_screen//2 - score.get_width()//2, heigth_screen//2 - 30))
+            if home_rect.left <= mouse[0] <= home_rect.right and home_rect.top <= mouse[1] <= home_rect.bottom:
+                pygame.draw.rect(screen, LIGHTER_GREY, home_rect)
+                pygame.draw.rect(screen, WHITE, home_rect, 1)
+            else:
+                pygame.draw.rect(screen, GREY, home_rect)
+            home_button = pygame.transform.scale(pygame.image.load("home_button.png"), (40, 40))
+            screen.blit(home_button, (home_rect.x + 5, home_rect.y + 5))
 
-        if home_rect.left <= mouse[0] <= home_rect.right and home_rect.top <= mouse[1] <= home_rect.bottom:
-            pygame.draw.rect(screen, LIGHTER_GREY, home_rect)
-            pygame.draw.rect(screen, WHITE, home_rect, 1)
-        else:
-            pygame.draw.rect(screen, GREY, home_rect)
-        home_button = pygame.transform.scale(pygame.image.load("home_button.png"), (40, 40))
-        screen.blit(home_button, (home_rect.x + 5, home_rect.y + 5))
+            if replay_rect.left <= mouse[0] <= replay_rect.right and replay_rect.top <= mouse[1] <= replay_rect.bottom:
+                pygame.draw.rect(screen, LIGHTER_DARK_GREEN, replay_rect)
+                pygame.draw.rect(screen, WHITE, replay_rect, 1)
+            else:
+                pygame.draw.rect(screen, DARK_GREEN, replay_rect)
+            replay_button = pygame.transform.scale(pygame.image.load("replay.png"), (40, 40))
+            screen.blit(replay_button, (replay_rect.x + 5, replay_rect.y + 5))
 
-        if replay_rect.left <= mouse[0] <= replay_rect.right and replay_rect.top <= mouse[1] <= replay_rect.bottom:
-            pygame.draw.rect(screen, LIGHTER_DARK_GREEN, replay_rect)
-            pygame.draw.rect(screen, WHITE, replay_rect, 1)
-        else:
-            pygame.draw.rect(screen, DARK_GREEN, replay_rect)
-        replay_button = pygame.transform.scale(pygame.image.load("replay.png"), (40, 40))
-        screen.blit(replay_button, (replay_rect.x + 5, replay_rect.y + 5))
-
-        clock.tick(fps)
-        pygame.display.flip()
+            clock.tick(fps)
+            pygame.display.flip()

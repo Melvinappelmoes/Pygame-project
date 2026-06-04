@@ -68,5 +68,14 @@ font = pygame.font.SysFont("Kijs", 37)
 
 fps = 60
 
+fall_speeds = [
+    0.800, 0.717, 0.633, 0.550, 0.467,
+    0.383, 0.300, 0.217, 0.133, 0.100,
+    0.100, 0.100, 0.083, 0.083, 0.083,
+    0.067, 0.067, 0.067, 0.050, 0.050,
+    0.050, 0.050, 0.050, 0.050, 0.050,
+    0.050, 0.050, 0.050, 0.050, 0.017
+]
+
 # verstreken tijd sinds laatste keer op geroepen
-delta_time = clock.tick(60) / 1000
+delta_time = clock.tick(fps) / 1000

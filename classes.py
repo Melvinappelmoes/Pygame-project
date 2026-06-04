@@ -6,12 +6,12 @@ class Tetris():
     def __init__(self):
         self.level = 1
         self.level_check = 1
+        self.level_i = 0
         self.tetriminos = [] # Dit is de soort van bag
-        self.random_tetriminos() 
-        self.current_shape = self.tetriminos[0]
+        self.current_shape = []
         self.hold_shape = []
         self.hold_available = True
-        self.score = 4500
+        self.score = 0
         self.grid = []
         self.make_grid()
         self.rows_to_clear = []
@@ -57,7 +57,8 @@ class Tetris():
             if all(self.grid[row_id]):
                 self.rows_to_clear.append(row_id)
                 self.grid[row_id] = [WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE]
-
+                self.level_i += 1
+                self.calculate_level()
         if self.rows_to_clear:
             self.clearing = True
             self.cleared_rows = len(self.rows_to_clear)
@@ -131,7 +132,11 @@ class Tetris():
 
     def calculate_level(self):
         # doet 1 level per 10 rows cleared
-        self.level = min(30, 1 + self.total_rows_cleared // 10)
+        if self.level_i // 10 == 1:
+            self.level += 1
+            self.level_i = 0
+
+        self.level = min(30, self.level)
 
         if self.level_check != self.level:
             sound_stage_clear.play()
@@ -180,9 +185,7 @@ class Tetris():
 
         # tekent het woord "NEXT" boven de tetriminos
         next_text = font.render("NEXT", True, WHITE)
-        screen.blit(next_text, (x_grid + width_screen // 2, 2 * grid_size)) 
-        next_rect = pygame.Rect(x_grid//2 + width_screen // 2 + 2.5 * grid_size,  2* grid_size - 10, 5 * grid_size, 10*grid_size + next_text.get_height() + 20)
-        pygame.draw.rect(screen, GREY, next_rect, 1)
+        screen.blit(next_text, (x_grid + width_screen // 2, 2 * grid_size))      
 
     def hold_cell(self):
         if self.hold_available:
@@ -259,8 +262,6 @@ class Tetris():
         settings = pygame.transform.scale(pygame.image.load(f"{self.mute[self.mute_i]}.png"), (40, 40))
         screen.blit(settings, (settings_rect.x + 5, settings_rect.y + 5))
 
-    def high_scores(self, highscores):
-        pass
 
 class Tetrimino():
     def __init__(self, shape, color, level):
@@ -279,9 +280,13 @@ class Tetrimino():
 
         self.fall_time = 0
         # formule om de val snelheid te berekenen
-        self.fall_speed = (0.8 - ((level - 1) * 0.007))**(level-1)
-        self.movement_time = 0
-        self.movement_delay = 0.1
+        self.fall_speed = fall_speeds[level-1]
+        self.movement_time = 0.20
+        self.movement_delay_not_moving = 0.25
+        self.movement_delay_moving = 0.05
+        self.lock_delay = max(0.1, 0.3 - (level - 1) * 0.01)
+        self.moving = False
+        self.is_locking = False
 
         self.start_y = 0
         self.end_y = 0
@@ -298,9 +303,18 @@ class Tetrimino():
                         self.min_x = min(self.min_x, x)
                         self.max_x = max(self.max_x, x)
                         self.max_y = max(self.max_y, y)
+                        if self.is_locking:
+                            # kijkt of de fall_time even of oneven is
+                            # even = blok is zichtbaar
+                            # oneven = blok is onzichtbaar
+                            visible = int(self.fall_time * 15) % 2 == 0
+                            color = self.color if visible else WHITE
+                        else:
+                            color = self.color
+
                         rect = pygame.Rect(self.x + x * grid_size, self.y + y *grid_size, grid_size, grid_size)
-                        pygame.draw.rect(screen, self.color, rect)
-  
+                        pygame.draw.rect(screen, color, rect)
+        
     def move_down(self, tetris, spatie, arrow_down):
         self.start_y = self.y
         self.fall_time += delta_time
@@ -323,12 +337,15 @@ class Tetrimino():
 
         elif self.fall_time >= self.fall_speed:
             if self.y - y_grid + (self.max_y+1) * grid_size >= height_grid or self.check_grid(tetris, self.y, 0, 1, 0):
-                for y in range(0, 4):
-                    for x in range(0, 4):
-                        if ((self.shape[self.rotation])[y])[x] == 1:
-                            tetris.grid[((self.y - y_grid) // grid_size) + y + 2][(self.x - x_grid) // grid_size + x] = self.color
-                self.fall_time = 0
-                tetris.check_full_rows()
+                self.is_locking = True
+                if self.fall_time >= self.fall_speed + self.lock_delay:
+                    self.is_locking = False
+                    for y in range(0, 4):
+                        for x in range(0, 4):
+                            if ((self.shape[self.rotation])[y])[x] == 1:
+                                tetris.grid[((self.y - y_grid) // grid_size) + y + 2][(self.x - x_grid) // grid_size + x] = self.color
+                    self.fall_time = 0
+                    tetris.check_full_rows()
                 return
             self.y += grid_size
             self.fall_time = 0
@@ -339,20 +356,27 @@ class Tetrimino():
 
     def move_horizontal(self, tetris):
         self.movement_time += delta_time
-        if self.movement_time >= self.movement_delay:
-            keys_pressed = pygame.key.get_pressed()
-            if keys_pressed[pygame.K_RIGHT]:
-                if self.check_grid(tetris, self.y, 1, 0, 0):
-                    pass
+        keys_pressed = pygame.key.get_pressed()
+        if self.moving:
+            delay = self.movement_delay_moving
+        else:
+            delay = self.movement_delay_not_moving
+        
+        if keys_pressed[pygame.K_RIGHT] or keys_pressed[pygame.K_LEFT]:
+            if self.movement_time >= delay:
+                if keys_pressed[pygame.K_RIGHT]:
+                    if not self.check_grid(tetris, self.y, 1, 0, 0):
+                        self.x += grid_size
+                        self.movement_time = 0
+                        self.moving = True
+                elif keys_pressed[pygame.K_LEFT]:
+                    if not self.check_grid(tetris, self.y, -1, 0, 0):
+                        self.x -= grid_size
+                        self.movement_time = 0
+                        self.moving = True
                 else:
-                    self.x += grid_size
-                    self.movement_time = 0
-            if keys_pressed[pygame.K_LEFT]:
-                if self.check_grid(tetris, self.y, -1, 0, 0):
-                    pass
-                else:
-                    self.x -= grid_size
-                    self.movement_time = 0
+                    self.moving = False
+                    self.movement_time = self.movement_delay_not_moving
     
     def rotate(self, tetris, rotation):
         for x in range(0, 4):

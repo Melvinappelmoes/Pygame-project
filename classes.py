@@ -7,7 +7,9 @@ class Tetris():
         self.level = 1
         self.level_check = 1
         self.level_i = 0
+        self.start_level = self.level
         self.tetriminos = [] # Dit is de soort van bag
+        self.random_tetriminos()
         self.current_shape = []
         self.hold_shape = []
         self.hold_available = True
@@ -152,19 +154,19 @@ class Tetris():
         spacing = 10
 
         # rendered de text: "SCORE" en laat het op de juiste plek zien met blit
-        score_text = font.render("SCORE", True, WHITE)
+        score_text = font1.render("SCORE", True, WHITE)
         screen.blit(score_text, (x_text - score_text.get_width() // 2, y_text))
-        score = font.render(f"{int(self.score)}", True, WHITE)
+        score = font1.render(f"{int(self.score)}", True, WHITE)
         screen.blit(score, (x_text - score.get_width() // 2, y_text + grid_size))
 
-        level_text = font.render("LEVEL", True, WHITE)
+        level_text = font1.render("LEVEL", True, WHITE)
         screen.blit(level_text, (x_text - level_text.get_width() // 2, y_text + 2 * grid_size + spacing))
-        level = font.render(f"{self.level}", True, WHITE)
+        level = font1.render(f"{self.level}", True, WHITE)
         screen.blit(level, (x_text - level.get_width() // 2, y_text + 3 * grid_size + spacing))
 
-        lines_text = font.render("LINES", True, WHITE)
+        lines_text = font1.render("LINES", True, WHITE)
         screen.blit(lines_text, (x_text - lines_text.get_width() // 2, y_text + 4 * grid_size + 2 * spacing))
-        lines = font.render(f"{self.total_rows_cleared}", True, WHITE)
+        lines = font1.render(f"{self.total_rows_cleared}", True, WHITE)
         screen.blit(lines, (x_text - lines.get_width() // 2, y_text + 5 * grid_size + 2 * spacing))
 
         #vierkant om de tekst heen
@@ -172,21 +174,29 @@ class Tetris():
         pygame.draw.rect(screen, GREY, rect, 2)
 
     def next_queue(self, filled):
+        next_text = font1.render("NEXT", True, WHITE)
+        screen.blit(next_text, ((x_grid + width_grid + width_screen) // 2 - next_text.get_width()//2, 2 * grid_size))
+
+        space = 10
+        rect = pygame.Rect((x_grid + width_grid + width_screen) // 2 - 2.5 * grid_size, 2 * grid_size - space, 5 * grid_size, 9*grid_size + next_text.get_height() + 3 * space)
+        pygame.draw.rect(screen, GREY, rect, 2)
+
         if filled:
-            for i in range(0, 3):
-                for y, row in enumerate(self.tetriminos[i+1].shape[0]):
+            for i in range(3):
+                piece = self.tetriminos[i + 1]
+                shape = piece.shape[0]
+                shape_width = (piece.max_x - piece.min_x + 1) * grid_size
+                start_x = x_grid + width_screen // 2 + (next_text.get_width() - shape_width) // 2
+                base_y = heigth_screen // 2 - height_grid // 2 + 3 * grid_size
+                for y, row in enumerate(shape):
                     for x, cube in enumerate(row):
                         if cube == 1:
-                            # tekent de volgende 3 blokken naast de grid door door de tetriminos lijst heen te lopen
-                            next_x = width_screen // 2 + width_grid // 2 + x * grid_size + 2 * grid_size
-                            next_y = heigth_screen // 2 - height_grid// 2 + y * grid_size + 3 * i * grid_size + 3 * grid_size
-                            rect = pygame.Rect(next_x, next_y, grid_size, grid_size)
-                            pygame.draw.rect(screen, self.tetriminos[i+1].color, rect)
-                            pygame.draw.rect(screen, GREY, rect, 1)
-
-        # tekent het woord "NEXT" boven de tetriminos
-        next_text = font.render("NEXT", True, WHITE)
-        screen.blit(next_text, (x_grid + width_screen // 2, 2 * grid_size))      
+                            next_x = start_x + (x - piece.min_x) * grid_size
+                            next_y = base_y + 3 * i * grid_size + y * grid_size
+                            block_rect = pygame.Rect(next_x, next_y, grid_size, grid_size)
+                            pygame.draw.rect(screen, piece.color, block_rect)
+                            pygame.draw.rect(screen, GREY, block_rect, 1)
+        
 
     def hold_cell(self):
         if self.hold_available:
@@ -207,26 +217,28 @@ class Tetris():
             
     def draw_hold_cell(self, filled):
         # tekent het woord "HOLD (C)" boven de hold cell
-        hcell_text = font.render("HOLD (C)", True, WHITE)
+        hcell_text = font1.render("HOLD (C)", True, WHITE)
         screen.blit(hcell_text, (x_grid // 2 - hcell_text.get_width() // 2, 2 * grid_size))
 
         rect = pygame.Rect(x_grid // 2 - 2.5 * grid_size, 2* grid_size - 10, 5 * grid_size, 3*grid_size + hcell_text.get_height() + 20)
         pygame.draw.rect(screen, GREY, rect, 2)
 
-        # shape_width = (max_x - min_x + 1) * grid_size
-        # start_x = cell_left + (cell_width - shape_width) // 2
-        # hold_x = start_x + (x - min_x) * grid_size
-
         if filled:
             if self.hold_shape:
-                for y, row in enumerate(self.hold_shape[0].shape[0]):
+                hold_piece = self.hold_shape[0]
+                shape_matrix = hold_piece.shape[0]
+                shape_width = (hold_piece.max_x - hold_piece.min_x + 1) * grid_size
+                start_x = x_grid // 2 - shape_width // 2  # links uitlijnen vanaf center
+                base_y = hcell_text.get_height() + 2 * grid_size + 20
+
+                for y, row in enumerate(shape_matrix):
                     for x, cube in enumerate(row):
                         if cube == 1:
-                            hold_x = x_grid//2 - 2.5 * grid_size + (x * grid_size) + 15
-                            hold_y = hcell_text.get_height() + 2 * grid_size + (y * grid_size) + 10
-                            rect = pygame.Rect(hold_x, hold_y, grid_size, grid_size)
-                            pygame.draw.rect(screen, self.hold_shape[0].color, rect)
-                            pygame.draw.rect(screen, GREY, rect, 1)
+                            hold_x = start_x + (x - hold_piece.min_x) * grid_size
+                            hold_y = base_y + y * grid_size
+                            block_rect = pygame.Rect(hold_x, hold_y, grid_size, grid_size)
+                            pygame.draw.rect(screen, hold_piece.color, block_rect)
+                            pygame.draw.rect(screen, GREY, block_rect, 1)
 
     def start_screen(self, mouse):
         self.print_text()
@@ -242,7 +254,7 @@ class Tetris():
             pygame.draw.rect(screen, WHITE, play_rect, 1)
         else:
             pygame.draw.rect(screen, DARK_GREEN, play_rect)
-        play_text = font.render("PLAY", True, WHITE)
+        play_text = font1.render("PLAY", True, WHITE)
         screen.blit(play_text, (play_rect.centerx - play_text.get_width()//2, play_rect.centery - play_text.get_height()//2))
 
         if level_rect.left <= mouse[0] <= level_rect.right and level_rect.top <= mouse[1] <= level_rect.bottom:
@@ -250,7 +262,7 @@ class Tetris():
             pygame.draw.rect(screen, WHITE, level_rect, 1)
         else:
             pygame.draw.rect(screen, GREY, level_rect)
-        level_text = font.render(f"LEVEL: {self.level}", True, WHITE)
+        level_text = font1.render(f"LEVEL: {self.level}", True, WHITE)
         screen.blit(level_text, (level_rect.centerx - level_text.get_width()//2, level_rect.centery - level_text.get_height()//2))
 
         if settings_rect.left <= mouse[0] <= settings_rect.right and settings_rect.top <= mouse[1] <= settings_rect.bottom:
@@ -267,17 +279,15 @@ class Tetris():
 class Tetrimino():
     def __init__(self, shape, color, level):
         self.x = x_grid + 3 * grid_size
-        self.max_x = 0
-        self.min_x = 4
         # plaatst de tetrimino 2 blokjes boven de grid
         self.y = -(2*grid_size) + y_grid
-        self.max_y = 0
-
         self.ghost_y = self.y
 
         self.color = color
         self.shape = shape
         self.rotation = 0
+
+        self.bounds()
 
         self.fall_time = 0
         # formule om de val snelheid te berekenen
@@ -294,6 +304,17 @@ class Tetrimino():
 
         self.distance = 0
 
+    def bounds(self):
+        self.min_x = 4
+        self.max_x = 0
+        self.max_y = 0
+        for y, row in enumerate(self.shape[self.rotation]):
+            for x, cube in enumerate(row):
+                    if cube == 1:
+                        self.min_x = min(self.min_x, x)
+                        self.max_x = max(self.max_x, x)
+                        self.max_y = max(self.max_y, y)
+
     def draw(self):
         # loopt door de rij en colom van de shape van de tetrimino
         for y, row in enumerate(self.shape[self.rotation]):
@@ -301,9 +322,6 @@ class Tetrimino():
                 # alleen als de cel binnen de grid zit moet hij worden laten zien
                 if self.y + y * grid_size >= y_grid:
                     if cube == 1:
-                        self.min_x = min(self.min_x, x)
-                        self.max_x = max(self.max_x, x)
-                        self.max_y = max(self.max_y, y)
                         if self.is_locking:
                             # kijkt of de fall_time even of oneven is
                             # even = blok is zichtbaar
@@ -386,7 +404,7 @@ class Tetrimino():
                     if self.check_grid(tetris, self.y, 0, 0, 1):
                         return
         self.rotation = (self.rotation + rotation) % len(self.shape)
-        self.min_x, self.max_x, self.max_y = 4,0,0
+        self.bounds()
     
     def check_grid(self, tetris, huidige_y, left_or_right, down, rotation):
         # Gaat door alle cellen van de tetromino stuk

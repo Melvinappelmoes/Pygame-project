@@ -48,8 +48,8 @@ high_scores_rect = pygame.Rect(width_screen//2 - 140, level_rect.bottom + 10, wi
 game_over_rect = pygame.Rect(width_screen//2 - 100, heigth_screen//2 - 75, 200, 150)
 home_rect = pygame.Rect(width_screen//2 - 90, heigth_screen//2 + 15, 50, 50)
 replay_rect = pygame.Rect(width_screen//2 - 30, heigth_screen//2 + 15, 50, 50)
-new_highscore_rect = pygame.Rect(width_screen//2 - 125, heigth_screen//2 - 75, 250, 250)
-ok_rect = pygame.Rect(width_screen//2 - 31.25, heigth_screen//2 + 121.75, 62.5, 37.5)
+new_highscore_rect = pygame.Rect(width_screen//2 - 125, heigth_screen//2 - 125, 250, 250)
+ok_rect = pygame.Rect(width_screen//2 - 31.25, heigth_screen//2 + 75.75, 62.5, 37.5)
 
 # kan je het geluidsniveau aanpassen (tussen 0.0 en 1.0)
 geluidsniveau = 0.3
@@ -66,7 +66,8 @@ sound_stage_clear.set_volume(geluidsniveau)
 sound_game_over.set_volume(geluidsniveau)
 
 # font
-font = pygame.font.SysFont("Kijs", 37)
+font1 = pygame.font.SysFont("Kijs", 37)
+font2 = pygame.font.SysFont("Kijs", 23)
 
 fps = 60
 

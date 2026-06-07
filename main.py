@@ -33,7 +33,7 @@ while running:
                     tetris.state = "main"
                 if level_rect.left <= mouse[0] <= level_rect.right and level_rect.top <= mouse[1] <= level_rect.bottom:
                     tetris.level = tetris.level%30 + 1
-                    start_level = tetris.level + 1
+                    tetris.start_level = tetris.level + 1
                 if settings_rect.left <= mouse[0] <= settings_rect.right and settings_rect.top <= mouse[1] <= settings_rect.bottom:
                     tetris.mute_i = (tetris.mute_i + 1)%2
                     geluidsniveau = (geluidsniveau + 0.3)%0.6
@@ -128,8 +128,10 @@ while running:
                     tetris.state = "menu"
                     restart = True
                 if replay_rect.left <= mouse[0] <= replay_rect.right and replay_rect.top <= mouse[1] <= replay_rect.bottom:
+                    pygame.mixer.music.load("Tetris_muziek.mp3")
+                    pygame.mixer.music.play(-1)
                     tetris = Tetris()
-                    tetris.level = start_level
+                    tetris.level = tetris.start_level
                     tetris.random_tetriminos() 
                     tetris.current_shape = tetris.tetriminos[0]
                     tetris.state = "main"
@@ -146,9 +148,9 @@ while running:
             pygame.draw.rect(screen, BLACK, game_over_rect)
             pygame.draw.rect(screen, WHITE, game_over_rect, 1)
         
-            game_over_text = font.render("GAME OVER", True, WHITE)
+            game_over_text = font1.render("GAME OVER", True, WHITE)
             screen.blit(game_over_text, (width_screen//2 - game_over_text.get_width()//2, heigth_screen//2 - 60))
-            score = font.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
+            score = font1.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
             screen.blit(score, (width_screen//2 - score.get_width()//2, heigth_screen//2 - 30))
 
             if home_rect.left <= mouse[0] <= home_rect.right and home_rect.top <= mouse[1] <= home_rect.bottom:
@@ -195,12 +197,14 @@ while running:
         else:
             pygame.draw.rect(screen, GREY, ok_rect)
     
-        new_highscore_text = font.render("NEW HIGHSCORE!", True, WHITE)
-        screen.blit(new_highscore_text, (width_screen//2 - new_highscore_text.get_width()//2, heigth_screen//2 - 60))
-        score = font.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
-        screen.blit(score, (width_screen//2 - score.get_width()//2, heigth_screen//2 - 30))
-        ok_text = font.render("OK", True, WHITE)
-        screen.blit(ok_text, (ok_rect.x ok_text+ ge, ok_rect.y))
+        new_highscore_text = font1.render("NEW HIGHSCORE!", True, WHITE)
+        screen.blit(new_highscore_text, (width_screen//2 - new_highscore_text.get_width()//2, heigth_screen//2 - 110))
+        score = font1.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
+        screen.blit(score, (width_screen//2 - score.get_width()//2, heigth_screen//2 - 80))
+        ok_text = font1.render("OK", True, WHITE)
+        screen.blit(ok_text, (ok_rect.x + 13, ok_rect.y + 8))
+        enter_initials_text = font2.render("ENTER YOUR INITIALS:", True, WHITE)
+        screen.blit(enter_initials_text, ((width_screen//2 - enter_initials_text.get_width()//2, heigth_screen//2 - 40)))
 
         clock.tick(fps)
         pygame.display.flip()

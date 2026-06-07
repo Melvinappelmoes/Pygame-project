@@ -11,7 +11,7 @@ class Tetris():
         self.current_shape = []
         self.hold_shape = []
         self.hold_available = True
-        self.score = 0
+        self.score = 4000
         self.grid = []
         self.make_grid()
         self.rows_to_clear = []
@@ -63,7 +63,7 @@ class Tetris():
             self.clearing = True
             self.cleared_rows = len(self.rows_to_clear)
             self.total_rows_cleared += len(self.rows_to_clear)
-            self.calculate_score(self.current_shape)
+            self.calculate_score()
         else:
             self.spawn_ready = True
 
@@ -89,23 +89,24 @@ class Tetris():
         self.current_shape.x = x_grid + 3 * grid_size
         self.current_shape.y = -(2*grid_size) + y_grid
 
-    def game_over(self):
-        for cell in self.grid[0]:
-            if cell != 0:
-                self.sound_game_over_play()
-                self.state = "game over"
+    def game_over(self, database):
+        for i in range(2):
+            for cell in self.grid[i]:
+                if cell != 0:
+                    self.sound_game_over_play()
+                    new_highscore = database.check_new_highscore(self)
+                    if new_highscore:
+                        database.update_highscores(self, "Klaas")
+                        self.state = "highscore"
+                    else:
+                        self.state = "game over"
 
-        for cell in self.grid[1]:
-            if cell != 0:
-                self.sound_game_over_play()
-                self.state = "game over"
-    
     def sound_game_over_play(self):
             sound_game_over.play()
             pygame.mixer.music.load('Tetris_ending.mp3')
             pygame.mixer.music.play(-1)
     
-    def calculate_score(self, tetrimino):
+    def calculate_score(self):
         # checkt hoeveel rijen er weggehaald zijn
         # als er een tetris is gehaald (4 rijen weg) dan moet de volgende tetris *1.5
         row_score = 0
@@ -425,7 +426,15 @@ class Highscores():
                 self.db.execute("INSERT INTO highscores (name, score) VALUES (?, ?)", ["", score])
             self.db.commit()
     
-    def new_high_score(self, tetris, naam):
+    def check_new_highscore(self, tetris):
+        cursor = self.db.execute("SELECT score FROM highscores")
+        scores = cursor.fetchall()
+        for score in [row[0] for row in scores]:
+            if tetris.score > score:
+                return True
+        return False
+    
+    def update_highscores(self, tetris, naam):
         cursor = self.db.execute("SELECT score FROM highscores")
         scores = cursor.fetchall()
         for score in [row[0] for row in scores]:

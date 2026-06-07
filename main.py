@@ -65,7 +65,7 @@ while running:
         pygame.display.flip()
 
     elif tetris.state == "main":
-        tetris.game_over()
+        tetris.game_over(high_scores)
         current = tetris.current_shape
         tetris.calculate_level()
         for event in pygame.event.get():
@@ -169,3 +169,41 @@ while running:
 
             clock.tick(fps)
             pygame.display.flip()
+
+    elif tetris.state == "highscore":
+        mouse = pygame.mouse.get_pos()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: 
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if ok_rect.left <= mouse[0] <= ok_rect.right and ok_rect.top <= mouse[1] <= ok_rect.bottom:
+                    print("OK ingeklikt")
+
+        screen.fill(DARK_GREY)
+
+        tetris.print_text()
+        tetris.next_queue(True)
+        tetris.draw_hold_cell(True)
+        pygame.draw.rect(screen, BLACK, rect_grid)
+        tetris.draw_grid(tetris.grid)
+        
+        pygame.draw.rect(screen, BLACK, new_highscore_rect)
+        pygame.draw.rect(screen, WHITE, new_highscore_rect, 1)
+        if ok_rect.left <= mouse[0] <= ok_rect.right and ok_rect.top <= mouse[1] <= ok_rect.bottom:
+            pygame.draw.rect(screen, LIGHTER_GREY, ok_rect)
+            pygame.draw.rect(screen, WHITE, ok_rect, 1)
+        else:
+            pygame.draw.rect(screen, GREY, ok_rect)
+    
+        new_highscore_text = font.render("NEW HIGHSCORE!", True, WHITE)
+        screen.blit(new_highscore_text, (width_screen//2 - new_highscore_text.get_width()//2, heigth_screen//2 - 60))
+        score = font.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
+        screen.blit(score, (width_screen//2 - score.get_width()//2, heigth_screen//2 - 30))
+        ok_text = font.render("OK", True, WHITE)
+        screen.blit(ok_text, (ok_rect.x ok_text+ ge, ok_rect.y))
+
+        clock.tick(fps)
+        pygame.display.flip()
+
+    elif tetris.state == "initials entered":
+        pass

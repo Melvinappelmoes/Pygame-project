@@ -9,11 +9,10 @@ class Tetris():
         self.level_i = 0
         self.start_level = self.level
         self.tetriminos = [] # Dit is de soort van bag
-        self.random_tetriminos()
         self.current_shape = []
         self.hold_shape = []
         self.hold_available = True
-        self.score = 4000
+        self.score = 0
         self.grid = []
         self.make_grid()
         self.rows_to_clear = []
@@ -28,6 +27,7 @@ class Tetris():
         self.state = "menu"
         self.mute = ["sound_on", "mute"]
         self.mute_i = 0
+        self.naam = ""
 
     def random_tetriminos(self):
         temp_shapes = shapes
@@ -98,7 +98,6 @@ class Tetris():
                     self.sound_game_over_play()
                     new_highscore = database.check_new_highscore(self)
                     if new_highscore:
-                        database.update_highscores(self, "Klaas")
                         self.state = "highscore"
                     else:
                         self.state = "game over"
@@ -177,7 +176,6 @@ class Tetris():
         next_text = font1.render("NEXT", True, WHITE)
         screen.blit(next_text, ((x_grid + width_grid + width_screen) // 2 - next_text.get_width()//2, 2 * grid_size))
 
-        space = 10
         rect = pygame.Rect((x_grid + width_grid + width_screen) // 2 - 2.5 * grid_size, 2 * grid_size - space, 5 * grid_size, 9*grid_size + next_text.get_height() + 3 * space)
         pygame.draw.rect(screen, GREY, rect, 2)
 
@@ -240,58 +238,22 @@ class Tetris():
                             pygame.draw.rect(screen, hold_piece.color, block_rect)
                             pygame.draw.rect(screen, GREY, block_rect, 1)
 
-    def start_screen(self, mouse):
-        self.print_text()
-        self.next_queue(False)
-        self.draw_hold_cell(False)
-
-        pygame.draw.rect(screen, BLACK, rect_grid)
-
-        screen.blit(logo, (x_grid + width_grid//2 - logo.get_width()//2, y_grid + 10))
-
-        if play_rect.left <= mouse[0] <= play_rect.right and play_rect.top <= mouse[1] <= play_rect.bottom:
-            pygame.draw.rect(screen, LIGHTER_DARK_GREEN, play_rect)
-            pygame.draw.rect(screen, WHITE, play_rect, 1)
-        else:
-            pygame.draw.rect(screen, DARK_GREEN, play_rect)
-        play_text = font1.render("PLAY", True, WHITE)
-        screen.blit(play_text, (play_rect.centerx - play_text.get_width()//2, play_rect.centery - play_text.get_height()//2))
-
-        if level_rect.left <= mouse[0] <= level_rect.right and level_rect.top <= mouse[1] <= level_rect.bottom:
-            pygame.draw.rect(screen, LIGHTER_GREY, level_rect)
-            pygame.draw.rect(screen, WHITE, level_rect, 1)
-        else:
-            pygame.draw.rect(screen, GREY, level_rect)
-        level_text = font1.render(f"LEVEL: {self.level}", True, WHITE)
-        screen.blit(level_text, (level_rect.centerx - level_text.get_width()//2, level_rect.centery - level_text.get_height()//2))
-
-        if settings_rect.left <= mouse[0] <= settings_rect.right and settings_rect.top <= mouse[1] <= settings_rect.bottom:
-            pygame.draw.rect(screen, LIGHTER_GREY, settings_rect)
-            pygame.draw.rect(screen, WHITE, settings_rect, 1)
-        else:
-            pygame.draw.rect(screen, GREY, settings_rect)
-
-        pygame.draw.rect(screen, LIGHTER_GREY, high_scores_rect, 1)
-        settings = pygame.transform.scale(pygame.image.load(f"{self.mute[self.mute_i]}.png"), (40, 40))
-        screen.blit(settings, (settings_rect.x + 5, settings_rect.y + 5))
-
-
 class Tetrimino():
     def __init__(self, shape, color, level):
-        self.x = x_grid + 3 * grid_size
-        # plaatst de tetrimino 2 blokjes boven de grid
-        self.y = -(2*grid_size) + y_grid
-        self.ghost_y = self.y
+        self.x = x_grid + 3 * grid_size # plaatst het blok in het midden
+        self.y = -(2*grid_size) + y_grid # plaatst de tetrimino 2 blokjes boven de grid
+        self.ghost_y = self.y # zet de start van de ghost_y op de 
 
+        # maakt de kleur en shape de meegegeven variabelen
         self.color = color
         self.shape = shape
-        self.rotation = 0
 
-        self.bounds()
+        self.rotation = 0 # de start rotatie is 0
+
+        self.bounds() # bepaalt de min_x, max_x en max_y om daarmee de breedte van het blok te bepalen
 
         self.fall_time = 0
-        # formule om de val snelheid te berekenen
-        self.fall_speed = fall_speeds[level-1]
+        self.fall_speed = fall_speeds[level-1] # pakt de snelheid uit het tabel op basis van het level
         self.movement_time = 0.20
         self.movement_delay_not_moving = 0.25
         self.movement_delay_moving = 0.05
@@ -366,6 +328,7 @@ class Tetrimino():
                     self.fall_time = 0
                     tetris.check_full_rows()
                 return
+            self.is_locking = False
             self.y += grid_size
             self.fall_time = 0
 
@@ -436,8 +399,11 @@ class Tetrimino():
 class Highscores():
     def __init__(self):
         self.db = sqlite3.connect("High_scores.s3db")
+        # maakt het tabel als hij nog niet bestaat
         self.db.execute("CREATE TABLE IF NOT EXISTS highscores (`id` INTEGER PRIMARY KEY, name TEXT, score INT)")
         count = self.db.execute("SELECT COUNT(*) FROM highscores").fetchone()[0]
+
+        # als er niks in de database zit stopt hij de standaard waardes erin
         if count == 0:
             scores = [5000, 4000, 3000, 2000, 1000]
             for score in scores:
@@ -447,21 +413,31 @@ class Highscores():
     def check_new_highscore(self, tetris):
         cursor = self.db.execute("SELECT score FROM highscores")
         scores = cursor.fetchall()
+        # loopt door alle scores om te kijken of de gehaalde score hoger is dan één van de huidige highscores,
+        # zo ja returned True en zo nee dan returned hij False
         for score in [row[0] for row in scores]:
             if tetris.score > score:
                 return True
         return False
     
-    def update_highscores(self, tetris, naam):
-        cursor = self.db.execute("SELECT score FROM highscores")
-        scores = cursor.fetchall()
-        for score in [row[0] for row in scores]:
-            if tetris.score > score:
-                self.db.execute("INSERT INTO highscores (name, score) VALUES (?, ?)", [naam, tetris.score])
-                self.db.execute("DELETE FROM highscores WHERE id not in (SELECT id FROM highscores ORDER BY score DESC LIMIT 5)")
-                self.db.commit()
-                break
+    def update_highscores(self, tetris):
+        # voegt de huidige score toe aan de database
+        self.db.execute("INSERT INTO highscores (name, score) VALUES (?, ?)", [tetris.naam, tetris.score])
+        # haalt de 5 laagste scores uit de database
+        self.db.execute("DELETE FROM highscores WHERE id not in (SELECT id FROM highscores ORDER BY score DESC LIMIT 5)")
+        self.db.commit()
 
     def get_highscores(self):
+        # vraagt de highscores op uit de database en returned ze in een lijst met tuples
         highscores = self.db.execute("SELECT name, score FROM highscores ORDER BY score DESC").fetchall()
         return highscores
+    
+    def reset_database(self):
+        # verwijdert alles van de database
+        self.db.execute("DELETE FROM highscores")
+
+        # stopt daarna weer de standaard waardes is de database
+        scores = [5000, 4000, 3000, 2000, 1000] # standaard waardes
+        for score in scores:
+                self.db.execute("INSERT INTO highscores (name, score) VALUES (?, ?)", ["", score]) # stopt een lege str en score in de database
+        self.db.commit()

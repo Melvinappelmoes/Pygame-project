@@ -43,13 +43,17 @@ clock = pygame.time.Clock()
 
 play_rect = pygame.Rect(width_screen//2 - 100, y_grid + logo.get_height() + 20, 200, 50)
 level_rect = pygame.Rect(width_screen//2 - 100, play_rect.bottom + 10, 200, 50)
-settings_rect = pygame.Rect(x_grid + width_grid - 60, height_grid + y_grid - 60, 50, 50)
-high_scores_rect = pygame.Rect(width_screen//2 - 140, level_rect.bottom + 10, width_grid - 20, settings_rect.top - 20 - level_rect.bottom)
+mute_rect = pygame.Rect(x_grid + width_grid - 60, height_grid + y_grid - 60, 50, 50)
+high_scores_rect = pygame.Rect(width_screen//2 - (width_grid - 40)//2, level_rect.bottom + 10, width_grid - 40, mute_rect.top - 20 - level_rect.bottom)
+pause_rect = pygame.Rect(width_screen//2 - 62.5, heigth_screen//2, 125, 37.5)
 game_over_rect = pygame.Rect(width_screen//2 - 100, heigth_screen//2 - 75, 200, 150)
 home_rect = pygame.Rect(width_screen//2 - 90, heigth_screen//2 + 15, 50, 50)
 replay_rect = pygame.Rect(width_screen//2 - 30, heigth_screen//2 + 15, 50, 50)
 new_highscore_rect = pygame.Rect(width_screen//2 - 125, heigth_screen//2 - 125, 250, 250)
 ok_rect = pygame.Rect(width_screen//2 - 31.25, heigth_screen//2 + 75.75, 62.5, 37.5)
+initials_rect = pygame.Rect(width_screen//2 - 62.5, heigth_screen//2 + 5, 125, 37.5 )
+
+space = 10
 
 # kan je het geluidsniveau aanpassen (tussen 0.0 en 1.0)
 geluidsniveau = 0.3
@@ -67,7 +71,7 @@ sound_game_over.set_volume(geluidsniveau)
 
 # font
 font1 = pygame.font.SysFont("Kijs", 37)
-font2 = pygame.font.SysFont("Kijs", 23)
+font2 = pygame.font.SysFont("Kijs", 25)
 
 fps = 60
 
@@ -82,3 +86,12 @@ fall_speeds = [
 
 # verstreken tijd sinds laatste keer op geroepen
 delta_time = clock.tick(fps) / 1000
+
+def draw_button(rect, text, font, normal_color, hover_color, mouse):
+    if rect.collidepoint(mouse):
+        pygame.draw.rect(screen, hover_color, rect)
+        pygame.draw.rect(screen, WHITE, rect, 1)
+    else:
+        pygame.draw.rect(screen, normal_color, rect)
+    text_picture = font.render(text, True, WHITE)
+    screen.blit(text_picture, (rect.centerx - text_picture.get_width()//2, rect.centery - text_picture.get_height()//2))

@@ -1,18 +1,17 @@
-import pygame, sqlite3
+import pygame
 from classes import *
 from variables import *
 pygame.init()
 
 
 # to do:
-# - High score opslaan (SQL)
 # - Pauze menu
-# - Aftellen voor starten
+# - Eind menu
 # - MUZIEK zelluf
 
 
 tetris = Tetris()
-high_scores = Highscores()
+highscores = Highscores()
 arrow_down = False
 
 # main gameloop
@@ -21,27 +20,60 @@ while running:
     # verstreken tijd sinds laatste keer op geroepen
     delta_time = clock.tick(fps) / 1000
     pygame.mixer.music.set_volume(geluidsniveau)
+    mouse = pygame.mouse.get_pos()
     if tetris.state == "menu":
-        mouse = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_DELETE:
+                    highscores.reset_database()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if play_rect.left <= mouse[0] <= play_rect.right and play_rect.top <= mouse[1] <= play_rect.bottom:
+                if play_rect.collidepoint(mouse):
                     tetris.random_tetriminos() 
                     tetris.current_shape = tetris.tetriminos[0]
                     tetris.state = "main"
-                if level_rect.left <= mouse[0] <= level_rect.right and level_rect.top <= mouse[1] <= level_rect.bottom:
+                if level_rect.collidepoint(mouse):
                     tetris.level = tetris.level%30 + 1
                     tetris.start_level = tetris.level + 1
-                if settings_rect.left <= mouse[0] <= settings_rect.right and settings_rect.top <= mouse[1] <= settings_rect.bottom:
+                if mute_rect.collidepoint(mouse):
                     tetris.mute_i = (tetris.mute_i + 1)%2
                     geluidsniveau = (geluidsniveau + 0.3)%0.6
                     sound_stage_clear.set_volume(geluidsniveau)
                     sound_game_over.set_volume(geluidsniveau)
         screen.fill(DARK_GREY)
         
-        tetris.start_screen(mouse)
+        tetris.print_text()
+        tetris.next_queue(False)
+        tetris.draw_hold_cell(False)
+
+        pygame.draw.rect(screen, BLACK, rect_grid)
+
+        screen.blit(logo, (x_grid + width_grid//2 - logo.get_width()//2, y_grid + 10))
+
+        draw_button(play_rect, "PLAY", font1, DARK_GREEN, LIGHTER_DARK_GREEN, mouse)
+        draw_button(level_rect, "LEVEL: {tetris.level}", font1, GREY, LIGHTER_GREY, mouse)
+        draw_button(mute_rect, "", font1)
+
+        if mute_rect.collidepoint(mouse):
+            pygame.draw.rect(screen, LIGHTER_GREY, mute_rect)
+            pygame.draw.rect(screen, WHITE, mute_rect, 1)
+        else:
+            pygame.draw.rect(screen, GREY, mute_rect)
+
+        pygame.draw.rect(screen, LIGHTER_GREY, high_scores_rect, 1)
+        mute = pygame.transform.scale(pygame.image.load(f"{tetris.mute[tetris.mute_i]}.png"), (40, 40))
+        screen.blit(mute, (mute_rect.x + 5, mute_rect.y + 5))
+
+        highscore_text = font1.render("HIGHSCORES", True, WHITE)
+        screen.blit(highscore_text, (width_screen//2 - highscore_text.get_width()//2, high_scores_rect.top + space))
+
+        highscores_list = highscores.get_highscores()
+        for i, naam_en_score in enumerate(highscores_list):
+            naam_text = font2.render(f"{naam_en_score[0].upper()}", True, WHITE)
+            score_text = font2.render(f"{naam_en_score[1]}", True, WHITE)
+            screen.blit(naam_text, (high_scores_rect.left + 2*space, high_scores_rect.top + space + i * 3*space + 40))
+            screen.blit(score_text, (high_scores_rect.right - 2*space - score_text.get_width(), high_scores_rect.top + space + i * 3*space + 40))
 
         clock.tick(fps)
         pygame.display.flip()
@@ -60,12 +92,16 @@ while running:
         tetris.print_text()
         tetris.next_queue(False)
         tetris.draw_hold_cell(False)
+        pygame.draw.rect(screen, BLACK, pause_rect)
+        pygame.draw.rect(screen, WHITE, pause_rect, 1)
+        paused_text = font1.render("PAUSED", True, WHITE)
+        screen.blit(paused_text, (pause_rect.centerx - paused_text.get_width()//2, pause_rect.centery - paused_text.get_height()//2))
 
         clock.tick(fps)
         pygame.display.flip()
 
     elif tetris.state == "main":
-        tetris.game_over(high_scores)
+        tetris.game_over(highscores)
         current = tetris.current_shape
         tetris.calculate_level()
         for event in pygame.event.get():
@@ -117,17 +153,18 @@ while running:
         pygame.display.flip()
     
     elif tetris.state == "game over":
-        mouse = pygame.mouse.get_pos()
         restart = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if home_rect.left <= mouse[0] <= home_rect.right and home_rect.top <= mouse[1] <= home_rect.bottom:
+                if home_rect.collidepoint(mouse):
+                    pygame.mixer.music.load("Tetris_muziek.mp3")
+                    pygame.mixer.music.play(-1)
                     tetris = Tetris()
                     tetris.state = "menu"
                     restart = True
-                if replay_rect.left <= mouse[0] <= replay_rect.right and replay_rect.top <= mouse[1] <= replay_rect.bottom:
+                if replay_rect.collidepoint(mouse):
                     pygame.mixer.music.load("Tetris_muziek.mp3")
                     pygame.mixer.music.play(-1)
                     tetris = Tetris()
@@ -153,7 +190,7 @@ while running:
             score = font1.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
             screen.blit(score, (width_screen//2 - score.get_width()//2, heigth_screen//2 - 30))
 
-            if home_rect.left <= mouse[0] <= home_rect.right and home_rect.top <= mouse[1] <= home_rect.bottom:
+            if home_rect.collidepoint(mouse):
                 pygame.draw.rect(screen, LIGHTER_GREY, home_rect)
                 pygame.draw.rect(screen, WHITE, home_rect, 1)
             else:
@@ -161,7 +198,7 @@ while running:
             home_button = pygame.transform.scale(pygame.image.load("home_button.png"), (40, 40))
             screen.blit(home_button, (home_rect.x + 5, home_rect.y + 5))
 
-            if replay_rect.left <= mouse[0] <= replay_rect.right and replay_rect.top <= mouse[1] <= replay_rect.bottom:
+            if replay_rect.collidepoint(mouse):
                 pygame.draw.rect(screen, LIGHTER_DARK_GREEN, replay_rect)
                 pygame.draw.rect(screen, WHITE, replay_rect, 1)
             else:
@@ -173,13 +210,19 @@ while running:
             pygame.display.flip()
 
     elif tetris.state == "highscore":
-        mouse = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
                 running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if ok_rect.left <= mouse[0] <= ok_rect.right and ok_rect.top <= mouse[1] <= ok_rect.bottom:
-                    print("OK ingeklikt")
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    tetris.naam = tetris.naam[:-1]
+                elif len(tetris.naam) < 3:
+                    if event.unicode.isalpha():
+                        tetris.naam += event.unicode
+            if event.type == pygame.MOUSEBUTTONDOWN:    
+                if ok_rect.collidepoint(mouse):
+                    tetris.state = "initials entered"
+                    highscores.update_highscores(tetris)
 
         screen.fill(DARK_GREY)
 
@@ -191,12 +234,12 @@ while running:
         
         pygame.draw.rect(screen, BLACK, new_highscore_rect)
         pygame.draw.rect(screen, WHITE, new_highscore_rect, 1)
-        if ok_rect.left <= mouse[0] <= ok_rect.right and ok_rect.top <= mouse[1] <= ok_rect.bottom:
+        if ok_rect.collidepoint(mouse):
             pygame.draw.rect(screen, LIGHTER_GREY, ok_rect)
             pygame.draw.rect(screen, WHITE, ok_rect, 1)
         else:
             pygame.draw.rect(screen, GREY, ok_rect)
-    
+        
         new_highscore_text = font1.render("NEW HIGHSCORE!", True, WHITE)
         screen.blit(new_highscore_text, (width_screen//2 - new_highscore_text.get_width()//2, heigth_screen//2 - 110))
         score = font1.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
@@ -206,8 +249,61 @@ while running:
         enter_initials_text = font2.render("ENTER YOUR INITIALS:", True, WHITE)
         screen.blit(enter_initials_text, ((width_screen//2 - enter_initials_text.get_width()//2, heigth_screen//2 - 40)))
 
+        pygame.draw.rect(screen, BLACK, initials_rect)
+        pygame.draw.rect(screen, GREY, initials_rect, 2)
+
+        naam_text = font1.render(f"{tetris.naam.upper()}", True, WHITE)
+        screen.blit(naam_text, (initials_rect.centerx - naam_text.get_width()//2, initials_rect.centery - naam_text.get_height()//2))
+
         clock.tick(fps)
         pygame.display.flip()
 
     elif tetris.state == "initials entered":
-        pass
+        restart = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: 
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if home_rect.collidepoint(mouse):
+                    pygame.mixer.music.load("Tetris_muziek.mp3")
+                    pygame.mixer.music.play(-1)
+                    tetris = Tetris()
+                    tetris.state = "menu"
+                    restart = True
+                if replay_rect.collidepoint(mouse):
+                    pygame.mixer.music.load("Tetris_muziek.mp3")
+                    pygame.mixer.music.play(-1)
+                    tetris = Tetris()
+                    tetris.level = tetris.start_level
+                    tetris.random_tetriminos() 
+                    tetris.current_shape = tetris.tetriminos[0]
+                    tetris.state = "main"
+                    restart = True
+
+        if not restart:
+            screen.fill(DARK_GREY)
+
+            tetris.print_text()
+            tetris.next_queue(True)
+            tetris.draw_hold_cell(True)
+            pygame.draw.rect(screen, BLACK, rect_grid)
+            tetris.draw_grid(tetris.grid)
+            
+            if home_rect.collidepoint(mouse):
+                pygame.draw.rect(screen, LIGHTER_GREY, home_rect)
+                pygame.draw.rect(screen, WHITE, home_rect, 1)
+            else:
+                pygame.draw.rect(screen, GREY, home_rect)
+            home_button = pygame.transform.scale(pygame.image.load("home_button.png"), (40, 40))
+            screen.blit(home_button, (home_rect.x + 5, home_rect.y + 5))
+
+            if replay_rect.collidepoint(mouse):
+                pygame.draw.rect(screen, LIGHTER_DARK_GREEN, replay_rect)
+                pygame.draw.rect(screen, WHITE, replay_rect, 1)
+            else:
+                pygame.draw.rect(screen, DARK_GREEN, replay_rect)
+            replay_button = pygame.transform.scale(pygame.image.load("replay.png"), (40, 40))
+            screen.blit(replay_button, (replay_rect.x + 5, replay_rect.y + 5))
+
+            clock.tick(fps)
+            pygame.display.flip()

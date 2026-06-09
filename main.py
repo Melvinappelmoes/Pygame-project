@@ -52,14 +52,8 @@ while running:
         screen.blit(logo, (x_grid + width_grid//2 - logo.get_width()//2, y_grid + 10))
 
         draw_button(play_rect, "PLAY", font1, DARK_GREEN, LIGHTER_DARK_GREEN, mouse)
-        draw_button(level_rect, "LEVEL: {tetris.level}", font1, GREY, LIGHTER_GREY, mouse)
-        draw_button(mute_rect, "", font1)
-
-        if mute_rect.collidepoint(mouse):
-            pygame.draw.rect(screen, LIGHTER_GREY, mute_rect)
-            pygame.draw.rect(screen, WHITE, mute_rect, 1)
-        else:
-            pygame.draw.rect(screen, GREY, mute_rect)
+        draw_button(level_rect, f"LEVEL: {tetris.level}", font1, GREY, LIGHTER_GREY, mouse)
+        draw_button(mute_rect, "", font1, GREY, LIGHTER_GREY, mouse)
 
         pygame.draw.rect(screen, LIGHTER_GREY, high_scores_rect, 1)
         mute = pygame.transform.scale(pygame.image.load(f"{tetris.mute[tetris.mute_i]}.png"), (40, 40))
@@ -190,20 +184,10 @@ while running:
             score = font1.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
             screen.blit(score, (width_screen//2 - score.get_width()//2, heigth_screen//2 - 30))
 
-            if home_rect.collidepoint(mouse):
-                pygame.draw.rect(screen, LIGHTER_GREY, home_rect)
-                pygame.draw.rect(screen, WHITE, home_rect, 1)
-            else:
-                pygame.draw.rect(screen, GREY, home_rect)
-            home_button = pygame.transform.scale(pygame.image.load("home_button.png"), (40, 40))
+            draw_button(home_rect, "", font1, GREY, LIGHTER_GREY, mouse)
             screen.blit(home_button, (home_rect.x + 5, home_rect.y + 5))
 
-            if replay_rect.collidepoint(mouse):
-                pygame.draw.rect(screen, LIGHTER_DARK_GREEN, replay_rect)
-                pygame.draw.rect(screen, WHITE, replay_rect, 1)
-            else:
-                pygame.draw.rect(screen, DARK_GREEN, replay_rect)
-            replay_button = pygame.transform.scale(pygame.image.load("replay.png"), (40, 40))
+            draw_button(replay_rect, "", font1, DARK_GREEN, LIGHTER_DARK_GREEN, mouse)
             screen.blit(replay_button, (replay_rect.x + 5, replay_rect.y + 5))
 
             clock.tick(fps)
@@ -234,18 +218,12 @@ while running:
         
         pygame.draw.rect(screen, BLACK, new_highscore_rect)
         pygame.draw.rect(screen, WHITE, new_highscore_rect, 1)
-        if ok_rect.collidepoint(mouse):
-            pygame.draw.rect(screen, LIGHTER_GREY, ok_rect)
-            pygame.draw.rect(screen, WHITE, ok_rect, 1)
-        else:
-            pygame.draw.rect(screen, GREY, ok_rect)
+        draw_button(ok_rect, "OK", font1, GREY, LIGHTER_GREY, mouse)
         
         new_highscore_text = font1.render("NEW HIGHSCORE!", True, WHITE)
         screen.blit(new_highscore_text, (width_screen//2 - new_highscore_text.get_width()//2, heigth_screen//2 - 110))
         score = font1.render(f"SCORE: {int(tetris.score)} ", True, WHITE)
         screen.blit(score, (width_screen//2 - score.get_width()//2, heigth_screen//2 - 80))
-        ok_text = font1.render("OK", True, WHITE)
-        screen.blit(ok_text, (ok_rect.x + 13, ok_rect.y + 8))
         enter_initials_text = font2.render("ENTER YOUR INITIALS:", True, WHITE)
         screen.blit(enter_initials_text, ((width_screen//2 - enter_initials_text.get_width()//2, heigth_screen//2 - 40)))
 
@@ -288,21 +266,11 @@ while running:
             tetris.draw_hold_cell(True)
             pygame.draw.rect(screen, BLACK, rect_grid)
             tetris.draw_grid(tetris.grid)
-            
-            if home_rect.collidepoint(mouse):
-                pygame.draw.rect(screen, LIGHTER_GREY, home_rect)
-                pygame.draw.rect(screen, WHITE, home_rect, 1)
-            else:
-                pygame.draw.rect(screen, GREY, home_rect)
-            home_button = pygame.transform.scale(pygame.image.load("home_button.png"), (40, 40))
+
+            draw_button(home_rect, "", font1, GREY, LIGHTER_GREY, mouse)
             screen.blit(home_button, (home_rect.x + 5, home_rect.y + 5))
 
-            if replay_rect.collidepoint(mouse):
-                pygame.draw.rect(screen, LIGHTER_DARK_GREEN, replay_rect)
-                pygame.draw.rect(screen, WHITE, replay_rect, 1)
-            else:
-                pygame.draw.rect(screen, DARK_GREEN, replay_rect)
-            replay_button = pygame.transform.scale(pygame.image.load("replay.png"), (40, 40))
+            draw_button(replay_rect, "", font1, DARK_GREEN, LIGHTER_DARK_GREEN, mouse)
             screen.blit(replay_button, (replay_rect.x + 5, replay_rect.y + 5))
 
             clock.tick(fps)

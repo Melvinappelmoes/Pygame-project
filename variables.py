@@ -53,6 +53,9 @@ new_highscore_rect = pygame.Rect(width_screen//2 - 125, heigth_screen//2 - 125, 
 ok_rect = pygame.Rect(width_screen//2 - 31.25, heigth_screen//2 + 75.75, 62.5, 37.5)
 initials_rect = pygame.Rect(width_screen//2 - 62.5, heigth_screen//2 + 5, 125, 37.5 )
 
+home_button = pygame.transform.scale(pygame.image.load("home_button.png"), (40, 40))
+replay_button = pygame.transform.scale(pygame.image.load("replay.png"), (40, 40))
+
 space = 10
 
 # kan je het geluidsniveau aanpassen (tussen 0.0 en 1.0)
@@ -75,6 +78,7 @@ font2 = pygame.font.SysFont("Kijs", 25)
 
 fps = 60
 
+# tabel met de valsnelheden van level 1 tot level 30
 fall_speeds = [
     0.800, 0.717, 0.633, 0.550, 0.467,
     0.383, 0.300, 0.217, 0.133, 0.100,

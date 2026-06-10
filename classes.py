@@ -50,7 +50,7 @@ class Tetris():
             self.grid.append([])
             for x in range(0, width_grid // grid_size):
                 self.grid[y].append(0)
-        
+
         # maakt een copy van de grid die leeg blijft
         self.empty_grid = [row.copy() for row in self.grid]
 
@@ -281,9 +281,9 @@ class Tetrimino():
         self.fall_time = 0                                          # houdt bij hoe lang het blok valt
         self.fall_speed = fall_speeds[level-1]                      # pakt de snelheid uit het tabel op basis van het level
         self.movement_time = 0                                      # houdt bij hoe lang geleden het blok voor het laatst bewogen is
-        self.movement_delay_not_moving = 0.25                       # de delay als hij daarvoor niet bewogen heeft
+        self.movement_delay_not_moving = 0.2                        # de delay als hij daarvoor niet bewogen heeft
         self.movement_delay_moving = 0.05                           # de delay als hij daarvoor wel bewogen heeft
-        self.lock_delay = max(0.1, 0.3 - (level - 1) * 0.01)       # zet de lock delay op basis van het level
+        self.lock_delay = max(0.1, 0.3 - (level - 1) * 0.01)        # zet de lock delay op basis van het level
 
         # standaard waardes, want op het begin is hij niet aan het bewegen en niet aan het vastzetten
         self.moving = False
@@ -313,7 +313,7 @@ class Tetrimino():
         # loopt door de rij en kolom van de shape van de tetrimino
         for y, row in enumerate(self.shape[self.rotation]):
             for x, cube in enumerate(row):
-                # alleen als de cel binnen de grid zit moet hij worden laten zien
+                # alleen als de cel binnen de grid zit moet hij worden laten zien en dus niet er boven
                 if self.y + y * grid_size >= y_grid:
                     if cube == 1:
                         # als hij aan het vastzetten is dan knippert hij wit
@@ -332,51 +332,76 @@ class Tetrimino():
                         pygame.draw.rect(screen, color, rect)
         
     def move_down(self, tetris, spatie, arrow_down):
+        # pakt de y waar het blok start
         self.start_y = self.y
         self.fall_time += delta_time
+        # voert dit uit als je hard drop hebt gedaan (spatie ingeklikt)
         if spatie:
+            # beweegt het blok zo ver mogelijk naar beneden
             while not self.check_grid(tetris, self.y, 0, 1, 0):
                 self.y += grid_size
 
-            for y in range(0, 4):
-                for x in range(0, 4):
-                    if ((self.shape[self.rotation])[y])[x] == 1:
-                        tetris.grid[((self.y - y_grid) // grid_size) + y + 2][((self.x - x_grid) // grid_size)+ x] = self.color
-
-            self.end_y = self.y
-            self.fall_time = 0
+            # wanneer hij beneden is wordt hij vastgezet in de grid en checkt hij op volle rijen
+            self.lock(tetris)
             tetris.check_full_rows()
+
+            # reset de fall_time
+            self.fall_time = 0
+
+            # pakt de y waar het blok is geïndigt
+            self.end_y = self.y
+
+            # berekent de afgelegde afstand
             self.distance = self.distance_traveled()
-            tetris.score += self.distance * 2 * tetris.level # hard drop score
-            self.distance = 0
+            tetris.score += self.distance * 2 * tetris.level # hard drop score = 2 punten per blokje * het level
+            self.distance = 0 # reset de afstand
             return
 
+        # voert dit uit als spatie niet is ingeklikt en de verstreken tijd groter of gelijk is aan de delay
         elif self.fall_time >= self.fall_speed:
-            if self.y - y_grid + (self.max_y+1) * grid_size >= height_grid or self.check_grid(tetris, self.y, 0, 1, 0):
+            # checkt of als het blok 1 omlaag beweegt hij iets raakt
+            if self.check_grid(tetris, self.y, 0, 1, 0):
+                # zo ja wordt is_locking True om het blok te laten knipperen 
                 self.is_locking = True
+                # dan wordt gecontroleerd of er meer of evenveel tijd is verstreken als dat de delays groot zijn
                 if self.fall_time >= self.fall_speed + self.lock_delay:
-                    self.is_locking = False
-                    for y in range(0, 4):
-                        for x in range(0, 4):
-                            if ((self.shape[self.rotation])[y])[x] == 1:
-                                tetris.grid[((self.y - y_grid) // grid_size) + y + 2][(self.x - x_grid) // grid_size + x] = self.color
+                    # zo ja dan wordt de fall_time gereset en is_locking weer False
                     self.fall_time = 0
+                    self.is_locking = False
+                    # blok wordt vastgezet en er wordt gecontroleerd of er volle rijen zijn
+                    self.lock(tetris)
                     tetris.check_full_rows()
-                return
-            self.is_locking = False
-            self.y += grid_size
-            self.fall_time = 0
+                return # gaat terug naar main gameloop
+            
+            # Dit gebeurt als hij nergens tegen aankomt
+            self.is_locking = False # als hij eerst niet meer omlaag kan en daarna wel weer moet hij niet meer knipperen
+            self.y += grid_size # 1 blokje omlaag
+            self.fall_time = 0 # fall_time gereset
 
+            # als pijltje omlaag is ingedrukt is dit True en krijg je er punten voor
             if arrow_down:
-                tetris.score += 1 * tetris.level # soft drop score
+                tetris.score += 1 * tetris.level # soft drop score = 1 per block * level
+    
+    def lock(self, tetris):
+        # de matrix van het blok is een 4 x 4 dus op deze manier kan je door de gehele matrix heen loopen
+        for y in range(0, 4):
+             for x in range(0, 4):
+                # checkt of het blokje in de matrix een 1 is en dus dat daar een blokje zit
+                if ((self.shape[self.rotation])[y])[x] == 1:
+                    # op de plek waar een blokje in de matrix zit wordt de kleur van het blok in de grid opgeslagen
+                    tetris.grid[((self.y - y_grid) // grid_size) + y + 2][(self.x - x_grid) // grid_size + x] = self.color
 
     def move_horizontal(self, tetris):
         self.movement_time += delta_time
         keys_pressed = pygame.key.get_pressed()
+
+        # als hij vorige frame al bewogen heeft wordt de delay anders dan als hij nog niet bewogen heeft
         if self.moving:
             delay = self.movement_delay_moving
+            print("wel")
         else:
             delay = self.movement_delay_not_moving
+            print("niet")
         
         if keys_pressed[pygame.K_RIGHT] or keys_pressed[pygame.K_LEFT]:
             if self.movement_time >= delay:
@@ -390,9 +415,9 @@ class Tetrimino():
                         self.x -= grid_size
                         self.movement_time = 0
                         self.moving = True
-                else:
-                    self.moving = False
-                    self.movement_time = self.movement_delay_not_moving
+        else:
+            self.moving = False
+            self.movement_time = self.movement_delay_not_moving
     
     def rotate(self, tetris, rotation):
         for x in range(0, 4):
@@ -407,27 +432,33 @@ class Tetrimino():
         # gaat door alle cellen van het tetrimino stuk
         for x in range(0, 4):
             for y in range(0, 4):
-                # maakt een x en y waarmee gecheckt wordt of de tetrimino buiten de grid gaat
+                # berekent de nieuwe x en y positie op basis van de meegegeven beweging
                 new_x = ((self.x - x_grid) // grid_size) + x + left_or_right
                 new_y = ((huidige_y - y_grid) // grid_size) + y + 2 + down
+                # alleen als er een blokje zit wordt er gecheckt
                 if self.shape[(self.rotation+rotation) % len(self.shape)][y][x] == 1:
+                    # checkt of het blok buiten de grid gaat of op een ander blok botst
                     if new_x * grid_size + grid_size > width_grid or new_x * grid_size < 0 or new_y >= 22 or tetris.grid[new_y][new_x] != 0:
                         return True
+        # als hij nergens tegen aankomt returned hij False
         return False
     
     def ghost_piece(self, tetris):
+        # reset de ghost_piece telkens naar de y van het blok, zodat hij elke frame weer opnieuw de locatie van de ghost block bepaalt
         self.ghost_y = self.y
+        
+        # beweegt het ghost blok naar beneden totdat hij niet meer kan
         while not self.check_grid(tetris, self.ghost_y, 0, 1, 0):
             self.ghost_y += grid_size
 
         for y, row in enumerate(self.shape[self.rotation]):
             for x, cube in enumerate(row):
-                if self.ghost_y + y * grid_size >= y_grid:
-                    if cube == 1:
-                        rect = pygame.Rect(self.x + x * grid_size, self.ghost_y + y *grid_size, grid_size, grid_size)
-                        pygame.draw.rect(screen, self.color, rect, width_ghost)
+                if cube == 1:
+                    rect = pygame.Rect(self.x + x * grid_size, self.ghost_y + y *grid_size, grid_size, grid_size)
+                    pygame.draw.rect(screen, self.color, rect, width_ghost)
 
     def distance_traveled(self):
+        # berekent de afgelegde afstand door eind hoogte - start hoogte te doen
         return (self.end_y - self.start_y) // grid_size
     
 class Highscores():
